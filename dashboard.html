@@ -8,9 +8,9 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     :root{
-      --bg:#0f172a;--surface:#1e293b;--surface2:#243447;--border:#334155;
-      --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
-      --blue:#3b82f6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--cyan:#06b6d4;
+      --bg:#f4f6f9;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;
+      --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+      --blue:#2563eb;--green:#059669;--amber:#b45309;--red:#dc2626;--purple:#6d28d9;--cyan:#0369a1;
     }
     html,body{height:100%;overflow:hidden}
     body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex}
@@ -82,11 +82,11 @@
     .tbl-title{font-size:13px;font-weight:600}
     .tbl-wrap{overflow-x:auto}
     table{width:100%;border-collapse:collapse;font-size:12.5px}
-    th{padding:9px 16px;text-align:left;font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;background:rgba(255,255,255,0.015)}
-    td{padding:10px 16px;border-bottom:1px solid rgba(51,65,85,0.4);white-space:nowrap}
+    th{padding:9px 16px;text-align:left;font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--surface2)}
+    td{padding:10px 16px;border-bottom:1px solid rgba(226,232,240,0.7);white-space:nowrap}
     tr:last-child td{border-bottom:none}
-    tbody tr:hover td{background:rgba(255,255,255,0.018)}
-    .tr-total td{font-weight:700;background:rgba(59,130,246,0.05);border-top:1px solid var(--border)}
+    tbody tr:hover td{background:rgba(241,245,249,0.8)}
+    .tr-total td{font-weight:700;background:rgba(37,99,235,0.05);border-top:1px solid var(--border)}
 
     /* ── Badges ── */
     .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
@@ -119,11 +119,11 @@
     /* ── Password Gate ── */
     #pw-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
     #pw-gate.hidden{display:none}
-    .pw-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 44px;width:360px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.5)}
+    .pw-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 44px;width:360px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.10)}
     .pw-logo{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 20px}
     .pw-title{font-size:20px;font-weight:700;margin-bottom:4px}
     .pw-sub{font-size:13px;color:var(--text2);margin-bottom:28px}
-    .pw-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:11px 14px;outline:none;transition:border 0.15s;margin-bottom:12px}
+    .pw-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:11px 14px;outline:none;transition:border 0.15s;margin-bottom:12px;font-family:inherit}
     .pw-input:focus{border-color:var(--blue)}
     .pw-btn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;padding:11px;cursor:pointer;transition:opacity 0.15s}
     .pw-btn:hover{opacity:0.88}
@@ -189,8 +189,8 @@
   </div>
 
   <div class="sidebar-foot">
-    <span class="status-dot"></span>
-    <span class="status-text">Demo data · not connected</span>
+    <span class="status-dot live"></span>
+    <span class="status-text">Revenue actual · costs pending</span>
   </div>
 </nav>
 
@@ -202,10 +202,10 @@
     <div class="sec-hdr">
       <div class="sec-hdr-left">
         <div class="sec-title">P&amp;L Overview</div>
-        <div class="sec-sub">Monthly revenue, all expenses, net profit, and 50/50 partner split</div>
+        <div class="sec-sub">Monthly revenue, Amazon fees, and available cost data</div>
       </div>
       <div class="sec-hdr-right">
-        <span class="demo-pill">⚠ Demo Data</span>
+        <span class="demo-pill" style="background:rgba(5,150,105,0.1);color:#059669;border-color:rgba(5,150,105,0.25)">✓ Revenue Actual · Costs Missing</span>
         <div class="period-tabs">
           <button class="ptab" onclick="ptab(this)">3 Mo</button>
           <button class="ptab active" onclick="ptab(this)">6 Mo</button>
@@ -215,30 +215,24 @@
       </div>
     </div>
 
-    <div class="kpi-row kpi-4">
+    <div class="kpi-row kpi-3">
       <div class="kpi">
         <div class="kpi-label">Gross Revenue</div>
-        <div class="kpi-val blue">$487,956</div>
-        <div class="kpi-change up">↑ 514% vs Apr 2025</div>
-        <div class="kpi-note">April 2026 · Both accounts</div>
+        <div class="kpi-val blue" id="kpiRevApr">$423,778</div>
+        <div class="kpi-change up">↑ 392% vs Apr 2025</div>
+        <div class="kpi-note">April 2026 · Amazon + Walmart · <span class="badge bg">✓ Actual</span></div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Total Expenses</div>
-        <div class="kpi-val">$439,160</div>
-        <div class="kpi-change flat">90.0% of revenue</div>
-        <div class="kpi-note">All categories combined</div>
+        <div class="kpi-label">Amazon Fees</div>
+        <div class="kpi-val red">$59,203</div>
+        <div class="kpi-change flat">14.0% of revenue</div>
+        <div class="kpi-note">Selling fees + FBA · <span class="badge bg">✓ Actual</span></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Net Profit</div>
-        <div class="kpi-val green">$48,796</div>
-        <div class="kpi-change up">10.0% margin</div>
-        <div class="kpi-note">Before 50/50 partner split</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Your Share (50%)</div>
-        <div class="kpi-val green">$24,398</div>
-        <div class="kpi-change flat">5.0% net margin</div>
-        <div class="kpi-note">After partner split</div>
+        <div class="kpi-val amber">⚠ Incomplete</div>
+        <div class="kpi-change flat">Missing: COGS, shipping, labor</div>
+        <div class="kpi-note">Cannot calculate until cost data provided</div>
       </div>
     </div>
 
@@ -260,9 +254,9 @@
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th>Month</th><th>Revenue</th><th>Product Cost</th><th>UPS / FedEx</th>
-            <th>Amazon Fees</th><th>Labor</th><th>LTL Freight</th><th>3PL Partners</th>
-            <th>Packaging</th><th>Other</th><th>Net Profit</th><th>Each Party</th><th>Margin</th>
+            <th>Month</th><th>Revenue</th><th>Amazon Fees</th><th>UPS Cost</th><th>FedEx Cost</th>
+            <th>Product Cost</th><th>Labor</th><th>LTL Freight</th><th>3PL Partners</th>
+            <th>Other</th><th>Net Profit</th><th>Margin</th>
           </tr></thead>
           <tbody id="tbPL"></tbody>
         </table>
@@ -278,7 +272,7 @@
         <div class="sec-sub">Amazon &amp; Walmart sales by channel, product, and location</div>
       </div>
       <div class="sec-hdr-right">
-        <span class="demo-pill">⚠ Demo Data</span>
+        <span class="demo-pill" style="background:rgba(5,150,105,0.1);color:#059669;border-color:rgba(5,150,105,0.25)">✓ Actual Data — Jan 2025 – Apr 2026</span>
         <div class="period-tabs">
           <button class="ptab" onclick="ptab(this)">3 Mo</button>
           <button class="ptab active" onclick="ptab(this)">6 Mo</button>
@@ -290,23 +284,27 @@
     <div class="kpi-row kpi-4">
       <div class="kpi">
         <div class="kpi-label">Total Revenue</div>
-        <div class="kpi-val blue">$487,956</div>
-        <div class="kpi-change up">↑ 514% YoY</div>
+        <div class="kpi-val blue">$427,054</div>
+        <div class="kpi-change up">↑ 392% vs Apr 2025</div>
+        <div class="kpi-note">April 2026 · <span class="badge bg">✓ Actual</span></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Amazon (2 Accounts)</div>
-        <div class="kpi-val">$484,103</div>
+        <div class="kpi-val">$423,778</div>
         <div class="kpi-change flat">99.2% of revenue</div>
+        <div class="kpi-note">MV + Supply Kick · <span class="badge bg">✓ Actual</span></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Walmart</div>
-        <div class="kpi-val">$3,853</div>
+        <div class="kpi-val">$3,276</div>
         <div class="kpi-change flat">0.8% of revenue</div>
+        <div class="kpi-note">Apr 2026 · <span class="badge bg">✓ Actual</span></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Total Orders</div>
-        <div class="kpi-val">9,865</div>
-        <div class="kpi-change flat">Avg AOV $49.46</div>
+        <div class="kpi-val">7,291</div>
+        <div class="kpi-change flat">Avg AOV $58.57</div>
+        <div class="kpi-note">Amazon 7,218 + Walmart 73 · <span class="badge bg">✓ Actual</span></div>
       </div>
     </div>
 
@@ -664,8 +662,8 @@
       </div>
       <div class="kpi">
         <div class="kpi-label">YTD Revenue</div>
-        <div class="kpi-val green">$997,563</div>
-        <div class="kpi-note">Jan–Apr 2026</div>
+        <div class="kpi-val green">$865,002</div>
+        <div class="kpi-note">Jan–Apr 2026 · <span class="badge bg">✓ Actual</span></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Full Year Projection</div>
@@ -762,9 +760,9 @@ function ptab(btn) {
 const CC = {}; // chart cache
 function destroyChart(id) { if (CC[id]) { CC[id].destroy(); delete CC[id]; } }
 
-const GRID = { color: 'rgba(51,65,85,0.6)' };
-const TICK = { color: '#64748b', font: { size: 11 } };
-const LEG  = { color: '#94a3b8', font: { size: 11 } };
+const GRID = { color: 'rgba(226,232,240,0.9)' };
+const TICK = { color: '#94a3b8', font: { size: 11 } };
+const LEG  = { color: '#475569', font: { size: 11 } };
 
 const BASE_OPTS = {
   responsive: true,
@@ -786,10 +784,19 @@ const colorVal = (v, t=0) => `style="color:var(--${v>t?'green':'red'})"`;
 // ════════════════════════════════════════════════════════════════════
 // MOCK DATA
 // ════════════════════════════════════════════════════════════════════
-const MONTHS6 = ['Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26'];
-const REV6    = [147624, 111363, 114905,  88734, 305967, 487956];
-const EXP6    = [132862, 100227, 103415,  79861, 275370, 439160];
-const PROF6   = REV6.map((r,i) => r - EXP6[i]);
+// ── ACTUAL DATA from Amazon Transaction Reports + Walmart ──
+const MONTHS6  = ['Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26'];
+const REV6     = [115242, 76153, 88764, 73405, 281212, 427054];  // Actual
+const AMZFEES6 = [17502, 11745, 13641, 11340, 39534, 59203];     // Actual
+// Cost items below are ESTIMATED or MISSING — flagged in table
+const EXP6    = REV6.map((r,f,i) => r); // placeholder, net profit unavailable
+const PROF6   = [null,null,null,null,null,null]; // Cannot compute without COGS
+
+// Full 16-month actual revenue history
+const ALL_MONTHS = ['Jan 25','Feb 25','Mar 25','Apr 25','May 25','Jun 25','Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26'];
+const ALL_REV_MV = [14902,22785,31364,86115,246193,245183,178081,108217,89503,72237,33733,19467,19496,22362,57306,89733];
+const ALL_REV_SK = [1200,1,0,0,0,25483,164759,156010,199475,144951,80643,56393,69173,51019,221870,334045];
+const ALL_WALMART = [0,0,0,0,0,0,0,0,0,0,866,293,95,25,2037,3276];
 
 // ════════════════════════════════════════════════════════════════════
 // SECTION RENDERERS
@@ -802,10 +809,9 @@ function renderPL() {
     data: {
       labels: MONTHS6,
       datasets: [
-        { type:'bar',  label:'Revenue',  data:REV6,  backgroundColor:'rgba(59,130,246,0.65)', borderRadius:4, order:2 },
-        { type:'bar',  label:'Expenses', data:EXP6,  backgroundColor:'rgba(239,68,68,0.45)',  borderRadius:4, order:3 },
-        { type:'line', label:'Net Profit', data:PROF6, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.1)',
-          fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#10b981', order:1 }
+        { type:'bar',  label:'Revenue (Actual)',      data:REV6,     backgroundColor:'rgba(37,99,235,0.65)',  borderRadius:4, order:2 },
+        { type:'bar',  label:'Amazon Fees (Actual)',  data:AMZFEES6, backgroundColor:'rgba(220,38,38,0.45)', borderRadius:4, order:3 },
+        { type:'line', label:'Net Profit (incomplete)', data:[null,null,null,null,null,null], borderColor:'#94a3b8', borderDash:[5,5], pointRadius:3, order:1 }
       ]
     },
     options: { ...BASE_OPTS, responsive:true }
@@ -815,39 +821,39 @@ function renderPL() {
   CC['cExpPie'] = new Chart(document.getElementById('cExpPie'), {
     type:'doughnut',
     data: {
-      labels:['Product Cost','UPS / FedEx','Amazon Fees','Labor','LTL Freight','3PL Partners','Packaging','Other'],
-      datasets:[{ data:[161523,217405,66849,18000,9200,16200,5800,4183], backgroundColor:COLORS, borderWidth:0, hoverOffset:6 }]
+      labels:['Amazon Fees (Actual)','UPS (est)','FedEx (est)','Product Cost (missing)','Labor (missing)','LTL Freight (missing)','3PL Partners (missing)'],
+      datasets:[{ data:[59203,18000,3000,0,0,0,0], backgroundColor:['#2563eb','#059669','#0369a1','#94a3b8','#94a3b8','#94a3b8','#94a3b8'], borderWidth:0, hoverOffset:6 }]
     },
     options:{ responsive:true, cutout:'60%',
       plugins:{ legend:{ position:'right', labels:{ ...LEG, boxWidth:12, padding:10 } } } }
   });
 
-  const rows = [
-    ['Nov 2025',147624,52000,65200,20200,12000,4800,1200,3024,-7776,-3888],
-    ['Dec 2025',111363,39200,49400,15200,12000,3600,900,2727,-8937,-4469],
-    ['Jan 2026',114905,40600,50800,15700,13500,4200,950,2665,-11845,-5923],
-    ['Feb 2026', 88734,31300,39200,12100,13500,3200,730,2031,-10296,-5148],
-    ['Mar 2026',305967,107900,135800,41800,15000,7800,2400,5270,30597,15299],
-    ['Apr 2026',487956,161523,217405,66849,18000,9200,5800,4183,48796,24398],
+  // P&L table — actual revenue & Amazon fees; cost items flagged as estimated/missing
+  const plRows = [
+    // [month, revenue, amzFees, upsCost, fedexCost, cogs, labor, ltl, 3pl, other]
+    ['Nov 2025', 115242, 17502],
+    ['Dec 2025',  76153, 11745],
+    ['Jan 2026',  88764, 13641],
+    ['Feb 2026',  73405, 11340],
+    ['Mar 2026', 281212, 39534],
+    ['Apr 2026', 427054, 59203],
   ];
-  document.getElementById('tbPL').innerHTML = rows.map(r => {
-    const profit = r[10], margin = (profit*2/r[1]*100).toFixed(1);
-    return `<tr>
-      <td class="bold">${r[0]}</td>
-      <td>${f$(r[1])}</td><td>${f$(r[2])}</td><td>${f$(r[3])}</td>
-      <td>${f$(r[4])}</td><td>${f$(r[5])}</td><td>${f$(r[6])}</td>
-      <td>${f$(r[7])}</td><td>${f$(r[8])}</td><td>${f$(r[9])}</td>
-      <td ${colorVal(r[10])}>${r[10]<0?'-':''}${f$(r[10])}</td>
-      <td ${colorVal(profit)}>${profit<0?'-':''}${f$(profit)}</td>
-      <td>${badge(profit>0?'bg':'br', (profit/r[1]*100).toFixed(1)+'%')}</td>
-    </tr>`;
-  }).join('') + `<tr class="tr-total">
+  const est = '<span class="badge ba" title="Estimated — ao source data">⚠ Est</span>';
+  const miss = '<span class="badge br" title="Missing — data not provided">⚠ Missing</span>';
+  const act  = (v) => `<span class="badge bg">✓ ${f$(v)}</span>`;
+  document.getElementById('tbPL').innerHTML = plRows.map(r => `<tr>
+    <td class="bold">${r[0]}</td>
+    <td>${act(r[1])}</td>
+    <td class="red">(${f$(r[2])})</td>
+    <td>${est}</td><td>${est}</td>
+    <td>${miss}</td><td>${miss}</td><td>${miss}</td><td>${miss}</td><td>${miss}</td>
+    <td class="muted">—</td>
+    <td class="muted">—</td>
+  </tr>`).join('') + `<tr class="tr-total">
     <td>6-Mo Total</td>
-    <td>${f$(REV6.reduce((a,b)=>a+b))}</td>
-    <td colspan="8" class="muted">—</td>
-    <td class="green">${f$(PROF6.reduce((a,b)=>a+b))}</td>
-    <td class="green">${f$(PROF6.reduce((a,b)=>a+b)/2)}</td>
-    <td>${badge('bg', fp(PROF6.reduce((a,b)=>a+b)/REV6.reduce((a,b)=>a+b)*100))}</td>
+    <td>${act(plRows.reduce((a,r)=>a+r[1],0))}</td>
+    <td class="red">(${f$(plRows.reduce((a,r)=>a+r[2],0))})</td>
+    <td colspan="9" class="muted">— cost data needed to complete P&L</td>
   </tr>`;
 }
 
@@ -857,10 +863,11 @@ function renderRevenue() {
   CC['cRevMonth'] = new Chart(document.getElementById('cRevMonth'), {
     type:'bar',
     data:{
-      labels: MONTHS6,
+      labels: ALL_MONTHS,
       datasets:[
-        { label:'Amazon', data:[146200,110500,113900,87800,303100,484103], backgroundColor:'rgba(59,130,246,0.75)', borderRadius:4, stack:'s' },
-        { label:'Walmart', data:[1424,863,1005,934,2867,3853], backgroundColor:'rgba(139,92,246,0.75)', borderRadius:4, stack:'s' }
+        { label:'MV Amazon', data:ALL_REV_MV, backgroundColor:'rgba(37,99,235,0.75)', borderRadius:4, stack:'s' },
+        { label:'SK Amazon', data:ALL_REV_SK, backgroundColor:'rgba(37,99,235,0.35)', borderRadius:4, stack:'s' },
+        { label:'Walmart',   data:ALL_WALMART, backgroundColor:'rgba(109,40,217,0.75)', borderRadius:4, stack:'s' }
       ]
     },
     options:{ ...BASE_OPTS, scales:{ x:{...BASE_OPTS.scales.x,stacked:true,ticks:TICK,grid:GRID}, y:{...BASE_OPTS.scales.y,stacked:true,ticks:TICK,grid:GRID} } }
@@ -916,7 +923,7 @@ function renderShipping() {
   });
 
   destroyChart('cShipDay');
-  CC['cShipDay'] = new Chart(document.getElementById('cShipDay'), {
+  CC['cShipDay') = new Chart(document.getElementById('cShipDay'), {
     type:'bar',
     data:{
       labels:['Mon','Tue','Wed','Thu','Fri','Sat (FedEx)'],
@@ -931,12 +938,12 @@ function renderShipping() {
   });
 
   const locs = [
-    ['Indiana (Hub)','Owned',4491,'$92,066','$20.50','$1,820',621,'$28.90','42.3%'],
+    ['Indiana (Hub)','Owned',4491,'$92,@66','$20.50','$1,820',621,'$28.90','42.3%'],
     ['Texas','Owned',1380,'$30,084','$21.80','$702',192,'$28.10','13.8%'],
     ['Nevada','Owned',971,'$24,673','$25.40','$480',164,'$30.20','11.3%'],
     ['N. Carolina','Partner',1181,'$22,321','$18.90','$520',0,'—','10.3%'],
     ['California','Partner',960,'$23,136','$24.10','$380',0,'—','10.6%'],
-    ['Florida','Partner',654,'$12,557','$19.20','$143',0,'—','5.8%'],
+    ['Florida','Partner',654,'$12,357','$19.20','$143',0,'—','5.8%'],
   ];
   document.getElementById('tbShipLoc').innerHTML = locs.map(r => `<tr>
     <td class="bold">${r[0]}</td>
@@ -1112,24 +1119,24 @@ function renderForecasting() {
   CC['cSeason'] = new Chart(document.getElementById('cSeason'), {
     type:'line',
     data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets:[
-      { label:'2025', data:[408,448,709,907,3188,6133,8754,6427,6737,6005,3232,2075], borderColor: '#64748b', borderDash:[4,2], tension:0.4, pointRadius:2 },
+      { label:'2025', data:[408,448,709,907,3188,6133,8754,6427,6737,6005,3232,2075], borderColor:'#64748b', borderDash:[4,2], tension:0.4, pointRadius:2 },
       { label:'2026 Actual', data:[2274,1788,5969,9865,null,null,null,null,null,null,null,null], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.08)', fill:true, tension:0.4, pointRadius:3 },
-      { label:'2026 Projected', data:[null,null,null,9865,22000,45000,75000,55000,51000,44000,unull,null], borderColor:'#f59e0b', borderDash:[6,3], tension:0.4, pointRadius:2 }
+      { label:'2026 Projected', data:[null,null,null,9865,22000,45000,75000,55000,51000,44000,null,null], borderColor:'#f59e0b', borderDash:[6,3], tension:0.4, pointRadius:2 }
     ]},
     options:{ ...BASE_OPTS }
   });
 
   const history = [
     ['Jan',null,408,'$114,905',2274,'+457%','Actual'],
-    ['Feb',unull,448,'$88,734',1788,'+299%','Actual'],
+    ['Feb',null,448,'$88,734',1788,'+299%','Actual'],
     ['Mar','$21,810',709,'$305,967',5969,'+742%','Actual'],
     ['Apr','$79,502',907,'$487,956',9865,'+514%','Actual'],
     ['May','$293,678',3188,'~$600,000','~22,000','~+104%','Projected'],
-    ['Jun','$328,608',6133,'~$950,000','~45,000','~+189%','Projected'],
-    ['Jul','$408,942,8754','~$1,300,000','~75,000','~+757%','Projected'],
+    ['Jun','$328,608',6133,'~$950,000','~85,000','~+189%','Projected'],
+    ['Jul','$408,942',8754,'~$1,300,000','~75,000','~+757%','Projected'],
     ['Aug','$305,490',6427,'~$975,000','~55,000','~+766%','Projected'],
     ['Sep','$376,520',6737,'~$1,020,000','~51,000','~+657%','Projected'],
-    ['Oct','$302,188',6005,'~$870,000','~84,000','~+632%','Projected'],
+    ['Oct','$302,188',6005,'~$870,000','~44,000','~+632%','Projected'],
     ['Nov','$147,624',3232,'~$430,000','~14,000','~+333%','Projected'],
     ['Dec','$111,363',2075,'~$330,000','~10,000','~+382%','Projected'],
   ];
