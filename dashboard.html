@@ -714,9 +714,9 @@
 </main>
 
 <script>
-// ════════════════════════════════════════════════════════════════════
-// PASSWORD PROTECTION — change DASHBOARD_PASSWORD to update access
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// PASSWORD PROTECTION \u2014 change DASHBOARD_PASSWORD to update access
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 const DASHBOARD_PASSWORD = 'PoolReview2026';
 
 function checkPW() {
@@ -735,9 +735,9 @@ if (sessionStorage.getItem('mv_auth') === '1') {
   document.getElementById('pw-gate').classList.add('hidden');
 }
 
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 // NAVIGATION
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     const id = item.dataset.section;
@@ -754,9 +754,9 @@ function ptab(btn) {
   btn.classList.add('active');
 }
 
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 // CHART HELPERS
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 const CC = {}; // chart cache
 function destroyChart(id) { if (CC[id]) { CC[id].destroy(); delete CC[id]; } }
 
@@ -772,23 +772,23 @@ const BASE_OPTS = {
 
 const COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#94a3b8'];
 
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 // FORMAT HELPERS
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 const f$ = n => '$' + Math.abs(Math.round(n)).toLocaleString();
 const fN = n => Math.round(n).toLocaleString();
 const fp = (n, d=1) => n.toFixed(d) + '%';
 const badge = (cls, txt) => `<span class="badge ${cls}">${txt}</span>`;
 const colorVal = (v, t=0) => `style="color:var(--${v>t?'green':'red'})"`;
 
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 // MOCK DATA
-// ════════════════════════════════════════════════════════════════════
-// ── ACTUAL DATA from Amazon Transaction Reports + Walmart ──
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// \u2500\u2500 ACTUAL DATA from Amazon Transaction Reports + Walmart \u2500\u2500
 const MONTHS6  = ['Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26'];
 const REV6     = [115242, 76153, 88764, 73405, 281212, 427054];  // Actual
 const AMZFEES6 = [17502, 11745, 13641, 11340, 39534, 59203];     // Actual
-// Cost items below are ESTIMATED or MISSING — flagged in table
+// Cost items below are ESTIMATED or MISSING \u2014 flagged in table
 const EXP6    = REV6.map((r,f,i) => r); // placeholder, net profit unavailable
 const PROF6   = [null,null,null,null,null,null]; // Cannot compute without COGS
 
@@ -798,11 +798,11 @@ const ALL_REV_MV = [14902,22785,31364,86115,246193,245183,178081,108217,89503,72
 const ALL_REV_SK = [1200,1,0,0,0,25483,164759,156010,199475,144951,80643,56393,69173,51019,221870,334045];
 const ALL_WALMART = [0,0,0,0,0,0,0,0,0,0,866,293,95,25,2037,3276];
 
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 // SECTION RENDERERS
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 
-// ── P&L ──
+// \u2500\u2500 P&L \u2500\u2500
 function renderPL() {
   destroyChart('cPL');
   CC['cPL'] = new Chart(document.getElementById('cPL'), {
@@ -828,7 +828,7 @@ function renderPL() {
       plugins:{ legend:{ position:'right', labels:{ ...LEG, boxWidth:12, padding:10 } } } }
   });
 
-  // P&L table — actual revenue & Amazon fees; cost items flagged as estimated/missing
+  // P&L table \u2014 actual revenue & Amazon fees; cost items flagged as estimated/missing
   const plRows = [
     // [month, revenue, amzFees, upsCost, fedexCost, cogs, labor, ltl, 3pl, other]
     ['Nov 2025', 115242, 17502],
@@ -838,26 +838,26 @@ function renderPL() {
     ['Mar 2026', 281212, 39534],
     ['Apr 2026', 427054, 59203],
   ];
-  const est = '<span class="badge ba" title="Estimated — ao source data">⚠ Est</span>';
-  const miss = '<span class="badge br" title="Missing — data not provided">⚠ Missing</span>';
-  const act  = (v) => `<span class="badge bg">✓ ${f$(v)}</span>`;
+  const est = '<span class="badge ba" title="Estimated \u2014 ao source data">\u26A0 Est</span>';
+  const miss = '<span class="badge br" title="Missing \u2014 data not provided">\u26A0 Missing</span>';
+  const act  = (v) => `<span class="badge bg">\u2713 ${f$(v)}</span>`;
   document.getElementById('tbPL').innerHTML = plRows.map(r => `<tr>
     <td class="bold">${r[0]}</td>
     <td>${act(r[1])}</td>
     <td class="red">(${f$(r[2])})</td>
     <td>${est}</td><td>${est}</td>
     <td>${miss}</td><td>${miss}</td><td>${miss}</td><td>${miss}</td><td>${miss}</td>
-    <td class="muted">—</td>
-    <td class="muted">—</td>
+    <td class="muted">\u2014</td>
+    <td class="muted">\u2014</td>
   </tr>`).join('') + `<tr class="tr-total">
     <td>6-Mo Total</td>
     <td>${act(plRows.reduce((a,r)=>a+r[1],0))}</td>
     <td class="red">(${f$(plRows.reduce((a,r)=>a+r[2],0))})</td>
-    <td colspan="9" class="muted">— cost data needed to complete P&L</td>
+    <td colspan="9" class="muted">\u2014 cost data needed to complete P&L</td>
   </tr>`;
 }
 
-// ── Revenue ──
+// \u2500\u2500 Revenue \u2500\u2500
 function renderRevenue() {
   destroyChart('cRevMonth');
   CC['cRevMonth'] = new Chart(document.getElementById('cRevMonth'), {
@@ -905,7 +905,7 @@ function renderRevenue() {
   </tr>`).join('');
 }
 
-// ── Shipping ──
+// \u2500\u2500 Shipping \u2500\u2500
 function renderShipping() {
   destroyChart('cShipLoc');
   CC['cShipLoc'] = new Chart(document.getElementById('cShipLoc'), {
@@ -941,20 +941,20 @@ function renderShipping() {
     ['Indiana (Hub)','Owned',4491,'$92,@66','$20.50','$1,820',621,'$28.90','42.3%'],
     ['Texas','Owned',1380,'$30,084','$21.80','$702',192,'$28.10','13.8%'],
     ['Nevada','Owned',971,'$24,673','$25.40','$480',164,'$30.20','11.3%'],
-    ['N. Carolina','Partner',1181,'$22,321','$18.90','$520',0,'—','10.3%'],
-    ['California','Partner',960,'$23,136','$24.10','$380',0,'—','10.6%'],
-    ['Florida','Partner',654,'$12,357','$19.20','$143',0,'—','5.8%'],
+    ['N. Carolina','Partner',1181,'$22,321','$18.90','$520',0,'\u2014','10.3%'],
+    ['California','Partner',960,'$23,136','$24.10','$380',0,'\u2014','10.6%'],
+    ['Florida','Partner',654,'$12,357','$19.20','$143',0,'\u2014','5.8%'],
   ];
   document.getElementById('tbShipLoc').innerHTML = locs.map(r => `<tr>
     <td class="bold">${r[0]}</td>
     <td>${badge(r[1]==='Owned'?'bb':'bp', r[1])}</td>
     <td>${fN(r[2])}</td><td>${r[3]}</td><td>${r[4]}</td>
     <td class="red">${r[5]}</td>
-    <td>${r[6]||'—'}</td><td>${r[7]}</td><td class="muted">${r[8]}</td>
+    <td>${r[6]||'\u2014'}</td><td>${r[7]}</td><td class="muted">${r[8]}</td>
   </tr>`).join('');
 }
 
-// ── Expenses ──
+// \u2500\u2500 Expenses \u2500\u2500
 function renderExpenses() {
   destroyChart('cExpCat');
   CC['cExpCat'] = new Chart(document.getElementById('cExpCat'), {
@@ -989,8 +989,8 @@ function renderExpenses() {
     ['May 1','NC Partner','3PL Services','N. Carolina','$4,900','May 15','badge-bg Paid'],
     ['May 1','CA Partner','3PL Services','California','$3,600','May 15','badge-bg Paid'],
     ['May 1','FL Partner','3PL Services','Florida','$2,900','May 15','badge-bg Paid'],
-    ['May 2','Central Transport','LTL Freight','IN → Nevada','$3,200','May 17','badge-ba Due'],
-    ['May 5','Central Transport','LTL Freight','IN → NC','$2,800','May 20','badge-ba Due'],
+    ['May 2','Central Transport','LTL Freight','IN \u2192 Nevada','$3,200','May 17','badge-ba Due'],
+    ['May 5','Central Transport','LTL Freight','IN \u2192 NC','$2,800','May 20','badge-ba Due'],
     ['May 5','Box Vendor','Pre-Printed Boxes','Indiana','$4,200','Jun 4','badge-ba Due'],
     ['May 8','Supply Partner','Product Cost','Indiana','$52,100','May 15','badge-br Overdue'],
   ];
@@ -1007,7 +1007,7 @@ function renderExpenses() {
   }).join('');
 }
 
-// ── Margins ──
+// \u2500\u2500 Margins \u2500\u2500
 function renderMargins() {
   const skuData = [
     ['4PackMuriaticAcid','Muriatic Acid','4-Pack',137,13014,2601,3064,1952,650,4747,19.2,'bg'],
@@ -1044,7 +1044,7 @@ function renderMargins() {
   </tr>`).join('');
 }
 
-// ── Inventory ──
+// \u2500\u2500 Inventory \u2500\u2500
 function renderInventory() {
   const rows = [
     ['Indiana (Hub)','Owned',1310,1.40,476,0.83,29.5,0.78,672],
@@ -1066,21 +1066,21 @@ function renderInventory() {
     <td>${badge(r[1]==='Owned'?'bb':'bp', r[1])}</td>
     <td>${fN(r[2])}</td><td>${wosBadge(r[3])}</td>
     <td>${fN(r[4])}</td><td>${wosBadge(r[5])}</td>
-    <td>${r[6]||'—'}</td><td>${wosBadge(r[7])}</td>
+    <td>${r[6]||'\u2014'}</td><td>${wosBadge(r[7])}</td>
     <td>${fN(r[8])}</td>
     <td>${alert(r[3], r[5])}</td>
   </tr>`).join('');
 }
 
-// ── Transfers ──
+// \u2500\u2500 Transfers \u2500\u2500
 function renderTransfers() {
   const rows = [
     ['5/5','5/8','3 bd','Outbound','3PL - Indiana','3PL - N. Carolina',192,144,6,'Delivered','PRO 326164530'],
     ['5/5','5/12','5 bd','Outbound','3PL - Indiana','3PL - Nevada',192,96,6,'Shipped','PRO 325829794'],
     ['5/8','5/13','3 bd','Outbound','3PL - Indiana','MV - Texas',288,0,6,'Shipped','PRO 326164548'],
-    ['5/11','5/11','—','Inbound TL','Supplier','3PL - Indiana',1152,'—',24,'Confirmed','Chlorine TL #1'],
-    ['5/12','5/12','—','Inbound TL','Supplier','3PL - Indiana','—',1152,24,'Confirmed','Acid Blue TL'],
-    ['5/14','5/14','—','Inbound TL','Supplier','3PL - Indiana',1152,'—',24,'Confirmed','Chlorine TL #2'],
+    ['5/11','5/11','\u2014','Inbound TL','Supplier','3PL - Indiana',1152,'\u2014',24,'Confirmed','Chlorine TL #1'],
+    ['5/12','5/12','\u2014','Inbound TL','Supplier','3PL - Indiana','\u2014',1152,24,'Confirmed','Acid Blue TL'],
+    ['5/14','5/14','\u2014','Inbound TL','Supplier','3PL - Indiana',1152,'\u2014',24,'Confirmed','Chlorine TL #2'],
     ['5/11','5/14','3 bd','Outbound','3PL - Indiana','MV - Texas',192,96,6,'Planned','Transfer 1'],
     ['5/12','5/14','2 bd','Outbound','3PL - Indiana','3PL - Florida',192,96,6,'Planned','Transfer 2'],
     ['5/12','5/15','3 bd','Outbound','3PL - Indiana','3PL - N. Carolina',192,96,6,'Planned','Transfer 3'],
@@ -1099,7 +1099,7 @@ function renderTransfers() {
   </tr>`).join('');
 }
 
-// ── Forecasting ──
+// \u2500\u2500 Forecasting \u2500\u2500
 function renderForecasting() {
   const weeks = ['2/9','2/16','2/23','3/2','3/9','3/16','3/23','3/30','4/6','4/13','4/20','4/27','5/4','5/11','5/18','5/25','6/1','6/8','6/15','6/22'];
   const actual    = [420,380,450,890,1240,1560,1820,2100,2280,2028,2285,2823,2765,null,null,null,null,null,null,null];
@@ -1142,7 +1142,7 @@ function renderForecasting() {
   ];
   document.getElementById('tbForecast').innerHTML = history.map(r => `<tr>
     <td class="bold">${r[0]}</td>
-    <td class="muted">${r[1]||'—'}</td><td class="muted">${fN(r[2])}</td>
+    <td class="muted">${r[1]||'\u2014'}</td><td class="muted">${fN(r[2])}</td>
     <td class="${r[6]==='Actual'?'bold':''}">${r[3]}</td>
     <td>${r[4]}</td>
     <td class="green">${r[5]}</td>
@@ -1150,33 +1150,33 @@ function renderForecasting() {
   </tr>`).join('');
 }
 
-// ── Insights ──
+// \u2500\u2500 Insights \u2500\u2500
 function renderInsights() {
   const cards = [
-    { type:'alert', tag:'Margin Risk — Immediate', title:'1-Pack Orders Are Likely Unprofitable',
+    { type:'alert', tag:'Margin Risk \u2014 Immediate', title:'1-Pack Orders Are Likely Unprofitable',
       val:'-$3 to -$6 / order',
       body:'Shipping a single bottle costs ~$12. Product cost ~$4.17. Amazon fee ~15%. Packaging and labor push this SKU deep into negative margin. Recommend pricing analysis and possible delisting or price increase.' },
     { type:'alert', tag:'Cash Flow Risk', title:'Antifreeze Ties Up $3,948 at Net-7',
       val:'~350 wks of supply',
-      body:'350 units × $11.28 cost = $3,948 paid on Net-7 terms. Demand is ~1 unit/week. Won\'t sell through until winter. Capital could be deployed to Acid Blue — your highest-demand, supply-constrained product.' },
-    { type:'warning', tag:'Revenue Leak — Quantified', title:'Saturday FedEx Premium Costs ~$4,800/Month',
+      body:'350 units \u00D7 $11.28 cost = $3,948 paid on Net-7 terms. Demand is ~1 unit/week. Won\'t sell through until winter. Capital could be deployed to Acid Blue \u2014 your highest-demand, supply-constrained product.' },
+    { type:'warning', tag:'Revenue Leak \u2014 Quantified', title:'Saturday FedEx Premium Costs ~$4,800/Month',
       val:'~$4,800 / month',
-      body:'~620 Saturday orders from Indiana ship FedEx at $28.90 avg vs. UPS weekday $21.10. That\'s $7.80 × 620 = $4,836/month in avoidable cost. Structural — needs mitigation strategy.' },
+      body:'~620 Saturday orders from Indiana ship FedEx at $28.90 avg vs. UPS weekday $21.10. That\'s $7.80 \u00D7 620 = $4,836/month in avoidable cost. Structural \u2014 needs mitigation strategy.' },
     { type:'warning', tag:'Unrecovered Loss', title:'UPS Damage Claims Not Being Filed',
       val:'~$4,200 est./month',
-      body:'Transit damage is occurring but no systematic UPS claims process exists. Based on industry damage rates for liquid chemicals, estimated monthly unrecovered loss is $3,000–$5,000. Need a tracking and filing workflow.' },
+      body:'Transit damage is occurring but no systematic UPS claims process exists. Based on industry damage rates for liquid chemicals, estimated monthly unrecovered loss is $3,000\u2013$5,000. Need a tracking and filing workflow.' },
     { type:'opportunity', tag:'Biggest Revenue Lever', title:'Acid Blue Supply is the Binding Constraint',
       val:'$50K+/mo upside',
-      body:'Acid Blue grew 51× YoY in April. You\'re limited to 1 TL every other week (~574 units). At demand trajectory, you could sell 3 TLs/month. Unlocking supply is the single highest-impact revenue action available.' },
+      body:'Acid Blue grew 51\u00D7 YoY in April. You\'re limited to 1 TL every other week (~574 units). At demand trajectory, you could sell 3 TLs/month. Unlocking supply is the single highest-impact revenue action available.' },
     { type:'opportunity', tag:'Expansion ROI', title:'Pennsylvania Facility Unlocks Northeast Volume',
       val:'~2,060+ units/mo',
       body:'NY+NJ alone = 4,000+ units historically from Indiana with long UPS zones (4-5 days). A PA facility reduces transit to 1-2 days for NY, NJ, CT, MA, RI, NH, VT, ME, DE, DC. Needs shipping cost model to quantify savings.' },
     { type:'opportunity', tag:'Year-Round Revenue', title:'B2B Commercial Accounts Offset Seasonality',
-      val:'Nov–Mar revenue gap',
+      val:'Nov\u2013Mar revenue gap',
       body:'Partner 3PL agreements run year-round but orders collapse in off-season. FL (0.68 AB/CL ratio) and TX (0.44) suggest year-round pool operators. Direct B2B outreach to aquatic centers, hotels, YMCAs removes Amazon fees and smooths revenue.' },
-    { type:'info', tag:'Competitive Intelligence', title:'Spreetail Has Automated Repricing — You Don\'t',
+    { type:'info', tag:'Competitive Intelligence', title:'Spreetail Has Automated Repricing \u2014 You Don\'t',
       val:null,
-      body:'Your primary competitor uses a real-time automated pricing engine. Manual pricing management means you\'re potentially leaving Buy Box wins on the table or over-discounting. A repricing tool is worth evaluating — particularly for your top 3 ASINs which drive 85%+ of revenue.' },
+      body:'Your primary competitor uses a real-time automated pricing engine. Manual pricing management means you\'re potentially leaving Buy Box wins on the table or over-discounting. A repricing tool is worth evaluating \u2014 particularly for your top 3 ASINs which drive 85%+ of revenue.' },
   ];
 
   document.getElementById('insightGrid').innerHTML = cards.map(c => `
@@ -1189,9 +1189,9 @@ function renderInsights() {
   `).join('');
 }
 
-// ════════════════════════════════════════════════════════════════════
-// DISPATCHER — only render charts when section is visible
-// ════════════════════════════════════════════════════════════════════
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// DISPATCHER \u2014 only render charts when section is visible
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 const renderers = {
   pl: renderPL, revenue: renderRevenue, shipping: renderShipping,
   expenses: renderExpenses, margins: renderMargins, inventory: renderInventory,
