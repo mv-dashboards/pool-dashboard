@@ -208,7 +208,7 @@ function renderShipping() {
   });
 
   destroyChart('cShipDay');
-  CC['cShipDay') = new Chart(document.getElementById('cShipDay'), {
+  CC['cShipDay'] = new Chart(document.getElementById('cShipDay'), {
     type:'bar',
     data:{
       labels:['Mon','Tue','Wed','Thu','Fri','Sat (FedEx)'],
