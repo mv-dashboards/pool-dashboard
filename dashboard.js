@@ -490,3 +490,11 @@ function renderSection(id) {
 // Initial render
 renderPL();
 renderInsights();
+// Fix nav icon display
+document.querySelectorAll('.nav-icon').forEach(el => {
+  const fixes = {
+    '\\u25C9':'◉','\\u2B21':'⬡','\\u25C8':'◈',
+    '\\u25C7':'◇','\\u25A3':'▣','\\u21C4':'⇄','\\u25EC':'◬'
+  };
+  if (fixes[el.textContent]) el.textContent = fixes[el.textContent];
+});
