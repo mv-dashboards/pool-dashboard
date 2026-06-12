@@ -1823,7 +1823,7 @@ function drillAmz() {
         const rate=m.product_sales>0?Math.abs(m.selling_fees)/m.product_sales*100:0;
         const [y,mo]=ym.split('-');
         const lbl=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1]+' '+y.slice(2);
-        return \`<tr><td class="bold">\${lbl}</td><td class="green">\${f$(m.product_sales)}</td><td class="red">\${f$(Math.abs(m.selling_fees))}</td><td class="red">\${f$(Math.abs(m.fba_fees))}</td><td class="red">\${f$(Math.abs(m.other_tx_fees))}</td><td class="amber">\${f$(Math.abs(m.promo_rebates))}</td><td class="amber">\${f$(Math.abs(m.refunds))}</td><td class="muted">\${fp(rate)}</td></tr>\`;
+        return `<tr><td class="bold">${lbl}</td><td class="green">${f$(m.product_sales)}</td><td class="red">${f$(Math.abs(m.selling_fees))}</td><td class="red">${f$(Math.abs(m.fba_fees))}</td><td class="red">${f$(Math.abs(m.other_tx_fees))}</td><td class="amber">${f$(Math.abs(m.promo_rebates))}</td><td class="amber">${f$(Math.abs(m.refunds))}</td><td class="muted">${fp(rate)}</td></tr>`;
       }).join('')}</tbody>
     </table>`;
 
@@ -1976,7 +1976,6 @@ function drillTpl() {
   });
 }
 
-let G_INV_IDX = 0;
 
 // ════════════════════════════════════════════════════════════════════════
 // DISPATCHER
