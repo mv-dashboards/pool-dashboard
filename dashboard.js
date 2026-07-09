@@ -22,7 +22,7 @@ if (sessionStorage.getItem('mv_auth') === '1') {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// NAVIGATION
+// NAVIGATION — called from onclick="showSection(this,'id')" in the HTML
 // ════════════════════════════════════════════════════════════════════════
 // Some nav items point at the dedicated Pool Chemical Forecasting dashboard
 // instead of a section in this app — that tool already does this live and
@@ -32,46 +32,74 @@ const EXTERNAL_NAV = {
   transfers: 'https://pool-chem-dashboard.netlify.app/',
 };
 
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const id = item.dataset.section;
-    if (EXTERNAL_NAV[id]) {
-      window.open(EXTERNAL_NAV[id], '_blank');
-      return;
-    }
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    item.classList.add('active');
-    document.getElementById(id).classList.add('active');
-    renderSection(id);
-  });
-});
+function showSection(el, id) {
+  if (EXTERNAL_NAV[id]) {
+    window.open(EXTERNAL_NAV[id], '_blank');
+    return;
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  const sec = document.getElementById(id);
+  if (sec) sec.classList.add('active');
+  renderSection(id);
+}
 
 // ════════════════════════════════════════════════════════════════════════
 // FILTERS — date range + marketplace
 // ════════════════════════════════════════════════════════════════════════
-// G_RANGE: 'this'|'3'|'6'|'ytd'|'all' months back from the latest data month.
+// G_RANGE: 'this'|'3'|'6'|'ytd'|'all'|'custom' months back from latest data.
 // G_MARKET: 'all'|'mv'|'sk'|'walmart' — which account(s) to include.
 let G_RANGE = '6';
 let G_MARKET = 'all';
+let G_FROM = null;  // YYYY-MM, used when G_RANGE === 'custom'
+let G_TO   = null;
 
-function ptab(btn) {
+function ptab(btn, section) {
   btn.closest('.period-tabs').querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const label = (btn.textContent || '').trim().toLowerCase();
-  if (label.includes('this')) G_RANGE = 'this';
-  else if (label.includes('3')) G_RANGE = '3';
-  else if (label.includes('6')) G_RANGE = '6';
+
+  // Show/hide this section's custom-range picker
+  const hdr = btn.closest('.sec-hdr-right');
+  const customDiv = hdr ? hdr.querySelector('.custom-range') : null;
+
+  if (label.includes('custom')) {
+    if (customDiv) customDiv.classList.add('visible');
+    G_RANGE = 'custom';
+    applyCustomRange(section || currentSectionId());
+    return;
+  }
+  if (customDiv) customDiv.classList.remove('visible');
+
+  if (label.includes('this'))     G_RANGE = 'this';
+  else if (label.includes('3'))   G_RANGE = '3';
+  else if (label.includes('6'))   G_RANGE = '6';
   else if (label.includes('ytd')) G_RANGE = 'ytd';
   else if (label.includes('all')) G_RANGE = 'all';
+  computeDB();
   renderSection(currentSectionId());
 }
 
-// Hook for a future marketplace filter control (dropdown not yet added to
-// dashboard.html — wire an onchange="setMarketFilter(this.value)" select
-// with values all|mv|sk|walmart to enable it).
+// Section → custom-range select id prefix
+const CR_PREFIX = { pl: 'pl', revenue: 'rev', expenses: 'exp' };
+
+function applyCustomRange(section) {
+  const p = CR_PREFIX[section] || 'pl';
+  const from = document.getElementById(p + 'From');
+  const to   = document.getElementById(p + 'To');
+  if (from && from.value) G_FROM = from.value;
+  if (to && to.value)     G_TO   = to.value;
+  G_RANGE = 'custom';
+  computeDB();
+  renderSection(currentSectionId());
+}
+
+// Marketplace filter hook (dropdown UI not yet added to the HTML — wire an
+// onchange="setMarketFilter(this.value)" select with all|mv|sk|walmart).
 function setMarketFilter(val) {
   G_MARKET = val;
+  computeDB();
   renderSection(currentSectionId());
 }
 
@@ -87,12 +115,19 @@ function rangeKeys(allKeysSorted) {
   const last = allKeysSorted[allKeysSorted.length - 1];
   const lastYear = last.slice(0, 4);
   switch (G_RANGE) {
-    case 'this': return allKeysSorted.slice(-1);
-    case '3':    return allKeysSorted.slice(-3);
-    case '6':    return allKeysSorted.slice(-6);
-    case 'ytd':  return allKeysSorted.filter(k => k.startsWith(lastYear));
+    case 'this':   return allKeysSorted.slice(-1);
+    case '3':      return allKeysSorted.slice(-3);
+    case '6':      return allKeysSorted.slice(-6);
+    case 'ytd':    return allKeysSorted.filter(k => k.startsWith(lastYear));
+    case 'custom': {
+      const from = G_FROM || allKeysSorted[0];
+      const to   = G_TO   || last;
+      const lo = from <= to ? from : to;
+      const hi = from <= to ? to : from;
+      return allKeysSorted.filter(k => k >= lo && k <= hi);
+    }
     case 'all':
-    default:     return allKeysSorted;
+    default:       return allKeysSorted;
   }
 }
 
@@ -137,11 +172,15 @@ const f$  = n => '$' + Math.abs(Math.round(n)).toLocaleString();
 const fN  = n => Math.round(n).toLocaleString();
 const badge = (cls, txt) => `<span class="badge ${cls}">${txt}</span>`;
 const colorVal = (v, t=0) => `style="color:var(--${v>t?'green':'red'})"`;
+const fPct = (part, whole) => whole > 0 ? (part / whole * 100).toFixed(1) + '%' : '—';
+const fMonth = k => new Date(k + '-01T12:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+const fMonthLong = k => new Date(k + '-01T12:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
 // ════════════════════════════════════════════════════════════════════════
-// LIVE DATA — fetched from Supabase on load
+// LIVE DATA — fetched from Supabase once, re-derived on every filter change
 // ════════════════════════════════════════════════════════════════════════
-let DB = null; // populated by loadData()
+let RAW = null; // raw view rows, fetched once by loadData()
+let DB  = null; // derived arrays for the current G_RANGE/G_MARKET, built by computeDB()
 
 function marketMatch(source) {
   const s = (source || '').toLowerCase();
@@ -160,8 +199,15 @@ async function loadData() {
     sbFetch('v_ops_inventory_latest?order=location_name.asc,sku_code.asc'),
     sbFetch('v_ops_data_freshness')
   ]);
+  RAW = { revRows, expRows, skuRows, invRows, freshRows };
+  computeDB();
+  populateCustomSelects();
+}
 
-  // ── Build monthly lookup maps ─────────────────────────────────────────
+function computeDB() {
+  if (!RAW) return;
+  const { revRows, expRows, skuRows, invRows, freshRows } = RAW;
+
   // Revenue: {YYYY-MM: {mv:n, sk:n, fees:n, orders:n}}
   const revMap = {};
   for (const r of revRows) {
@@ -186,28 +232,16 @@ async function loadData() {
     if (t === '3pl')      expMap[k].tpl      += Number(e.amount) || 0;
   }
 
-  // ── Build ordered month lists ─────────────────────────────────────────
-  const allKeys = [...new Set([
-    ...Object.keys(revMap),
-    ...Object.keys(expMap)
-  ])].sort();
-
+  const allKeys = [...new Set([...Object.keys(revMap), ...Object.keys(expMap)])].sort();
   const selKeys = rangeKeys(allKeys);
-
-  const fmt = k => {
-    const d = new Date(k + '-01');
-    return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-  };
-
   const get = (map, k, field) => map[k] ? (map[k][field] || 0) : 0;
-
   const fresh = (freshRows && freshRows[0]) || {};
 
   DB = {
-    // Selected-range arrays (P&L, Expenses) — driven by the period filter
-    months6:  selKeys.map(fmt),
+    // Selected-range arrays — driven by the period filter
+    months6:  selKeys.map(fMonth),
     rev6:     selKeys.map(k => get(revMap, k, 'mv') + get(revMap, k, 'sk')),
-    fees6:    selKeys.map(k => get(revMap, k, 'fees')),
+    fees6:    selKeys.map(k => Math.abs(get(revMap, k, 'fees'))),
     cogs6:    selKeys.map(k => get(expMap, k, 'product')),
     ups6:     selKeys.map(k => get(expMap, k, 'shipping')),
     ltl6:     selKeys.map(k => get(expMap, k, 'ltl')),
@@ -215,26 +249,55 @@ async function loadData() {
 
     // All-time arrays (Revenue history chart) — unaffected by period filter,
     // still respects the marketplace filter
-    allMonths: allKeys.map(fmt),
+    allMonths: allKeys.map(fMonth),
     allMV:     allKeys.map(k => get(revMap, k, 'mv')),
     allSK:     allKeys.map(k => get(revMap, k, 'sk')),
 
-    // SKUs
     skus: skuRows,
-
-    // Inventory
     inventory: invRows,
 
-    // Data freshness (most recent date loaded per source table)
     freshness: {
       orders: fresh.latest_order_date || null,
       expenses: fresh.latest_expense_date || null,
       inventory: fresh.latest_inventory_date || null,
     },
 
-    // Raw maps for computed values
-    revMap, expMap, last6: selKeys
+    revMap, expMap, allKeys, last6: selKeys
   };
+}
+
+// Human label for the selected period, e.g. "Jan 2026 – Jun 2026"
+function periodLabel() {
+  if (!DB || !DB.last6.length) return '—';
+  const a = DB.last6[0], b = DB.last6[DB.last6.length - 1];
+  return a === b ? fMonthLong(a) : `${fMonthLong(a)} – ${fMonthLong(b)}`;
+}
+
+// Fill the three custom-range select pairs with the months present in data
+function populateCustomSelects() {
+  if (!DB) return;
+  const keys = DB.allKeys;
+  for (const p of ['pl', 'rev', 'exp']) {
+    const from = document.getElementById(p + 'From');
+    const to   = document.getElementById(p + 'To');
+    if (!from || !to || from.options.length) continue;
+    const opts = keys.map(k => `<option value="${k}">${fMonthLong(k)}</option>`).join('');
+    from.innerHTML = opts;
+    to.innerHTML   = opts;
+    from.value = keys[Math.max(0, keys.length - 6)];
+    to.value   = keys[keys.length - 1];
+  }
+}
+
+// Set text content if the element exists (all KPI fills go through this so a
+// missing element can never throw and break a render)
+function setTxt(id, txt) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = txt;
+}
+function setHtml(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -247,6 +310,23 @@ function renderPL() {
   const { months6: M, rev6: R, fees6: F, cogs6: C, ups6: U, ltl6: L, tpl6: T } = DB;
   const totalExp = M.map((_, i) => F[i] + C[i] + U[i] + L[i] + T[i]);
   const profit   = M.map((_, i) => R[i] - totalExp[i]);
+  const sum = arr => arr.reduce((a,v)=>a+v,0);
+
+  // KPI cards
+  const sumRev = sum(R), sumFees = sum(F), sumProfit = sum(profit);
+  setTxt('plKpiRev', f$(sumRev));
+  setTxt('plKpiRevNote', periodLabel() + ' — Amazon + Walmart');
+  setTxt('plKpiFees', f$(sumFees));
+  setTxt('plKpiFeePct', fPct(sumFees, sumRev) + ' of revenue');
+  const profEl = document.getElementById('plKpiProfit');
+  if (profEl) {
+    profEl.textContent = sumProfit < 0 ? '(' + f$(-sumProfit) + ')' : f$(sumProfit);
+    profEl.style.color = sumProfit < 0 ? 'var(--red)' : 'var(--green)';
+  }
+  setTxt('plKpiProfitPct', fPct(sumProfit, sumRev) + ' net margin');
+  setTxt('plSub', 'Period: ' + periodLabel());
+  setTxt('plPieSub', 'Selected period by category');
+  setTxt('plTableTitle', 'Monthly P&L — ' + periodLabel());
 
   destroyChart('cPL');
   CC['cPL'] = new Chart(document.getElementById('cPL'), {
@@ -267,16 +347,17 @@ function renderPL() {
     type:'doughnut',
     data: {
       labels: ['Product Cost','UPS/FedEx','Amazon Fees','LTL Freight','3PL + Labor'],
-      datasets:[{ data: totals, backgroundColor:['#3b82f6','#ef4444','#f59e0b','#8b5cf6','#10b981'], borderWidth:0, hoverOffset:6 }]
+      datasets:[{ data: [totals[0], totals[1], totals[2], totals[3], totals[4]], backgroundColor:['#3b82f6','#ef4444','#f59e0b','#8b5cf6','#10b981'], borderWidth:0, hoverOffset:6 }]
     },
     options:{ responsive:true, cutout:'60%',
       plugins:{ legend:{ position:'right', labels:{ ...LEG, boxWidth:12, padding:10 } } } }
   });
 
-  const sum = arr => arr.reduce((a,v)=>a+v,0);
   const neg = v => `<span class="${v<0?'red':'green'}">${v<0?'('+f$(-v)+')':f$(v)}</span>`;
   const act = v => `<span class="badge bg">${f$(v)}</span>`;
 
+  // 9 columns: Month | Revenue | Amazon Fees | UPS/FedEx | Product Cost |
+  //            LTL Freight | 3PL + Labor | Total Expenses | Net Profit
   document.getElementById('tbPL').innerHTML =
     M.map((m, i) => `<tr>
       <td class="bold">${m}</td>
@@ -286,11 +367,8 @@ function renderPL() {
       <td class="red">(${f$(C[i])})</td>
       <td class="red">(${f$(L[i])})</td>
       <td class="red">(${f$(T[i])})</td>
-      <td class="muted">&mdash;</td>
-      <td class="muted">&mdash;</td>
-      <td class="muted">&mdash;</td>
+      <td class="red bold">(${f$(totalExp[i])})</td>
       <td>${neg(profit[i])}</td>
-      <td class="muted"></td>
     </tr>`).join('') +
     `<tr class="tr-total">
       <td>${M.length}-Mo Total</td>
@@ -300,15 +378,9 @@ function renderPL() {
       <td class="red">(${f$(sum(C))})</td>
       <td class="red">(${f$(sum(L))})</td>
       <td class="red">(${f$(sum(T))})</td>
-      <td class="muted" colspan="4"></td>
-      <td>${neg(sum(profit))}</td>
-      <td></td>
+      <td class="red bold">(${f$(sum(totalExp))})</td>
+      <td>${neg(sumProfit)}</td>
     </tr>`;
-
-  // Update KPI card
-  const latestRev = R[R.length-1];
-  const el = document.getElementById('kpiRevApr');
-  if (el) el.textContent = f$(latestRev);
 
   renderFreshnessBadge();
 }
@@ -339,8 +411,23 @@ function renderFreshnessBadge() {
 // ── Revenue ──────────────────────────────────────────────────────────
 function renderRevenue() {
   if (!DB) return;
-  const { allMonths, allMV, allSK, skus } = DB;
+  const { allMonths, allMV, allSK, skus, revMap, last6 } = DB;
   const allWalmart = allMonths.map(() => 0); // Walmart not in ops_orders yet
+
+  // KPI cards — selected period
+  const mvSum = last6.reduce((a,k)=>a+(revMap[k]?.mv||0),0);
+  const skSum = last6.reduce((a,k)=>a+(revMap[k]?.sk||0),0);
+  const total = mvSum + skSum;
+  setTxt('revKpiTotal', f$(total));
+  setTxt('revKpiTotalNote', periodLabel());
+  setTxt('revKpiMV', f$(mvSum));
+  setTxt('revKpiMVPct', fPct(mvSum, total) + ' of revenue');
+  setTxt('revKpiSK', f$(skSum));
+  setTxt('revKpiSKPct', fPct(skSum, total) + ' of revenue');
+  setTxt('revKpiWM', '$0');
+  setTxt('revKpiWMPct', 'No Walmart data loaded yet');
+  setTxt('revSub', 'Period: ' + periodLabel());
+  setTxt('revTableTitle', 'SKU Revenue Breakdown — All Data');
 
   destroyChart('cRevMonth');
   CC['cRevMonth'] = new Chart(document.getElementById('cRevMonth'), {
@@ -422,10 +509,6 @@ function renderShipping() {
       scales:{ x:{ticks:TICK,grid:GRID}, y:{ticks:{...TICK,callback:v=>'$'+v},grid:GRID} } }
   });
 
-  const upsTotal = last6.reduce((a,k) => a + (expMap[k]?.shipping || 0), 0);
-  const ordTotal = last6.reduce((a,k) => a + ((revMap[k]?.mv||0) + (revMap[k]?.sk||0) > 0 ? revMap[k].orders : 0), 0);
-  const avgCost  = ordTotal > 0 ? upsTotal / ordTotal : 0;
-
   const locs = [
     ['Indiana (Hub)','Owned',4491,'$92,066','$20.50','$1,820',621,'$28.90','42.3%'],
     ['Texas','Owned',1380,'$30,084','$21.80','$702',192,'$28.10','13.8%'],
@@ -444,63 +527,136 @@ function renderShipping() {
 }
 
 // ── Expenses ─────────────────────────────────────────────────────────
+const EXP_CATS = [
+  { key:'product',  drill:'cogs', label:'Product Cost', catId:'expCatCogs' },
+  { key:'shipping', drill:'ups',  label:'UPS / FedEx',  catId:'expCatUps'  },
+  { key:'fees',     drill:'amz',  label:'Amazon Fees',  catId:'expCatFees' },
+  { key:'ltl',      drill:'ltl',  label:'LTL Freight',  catId:'expCatLtl'  },
+  { key:'tpl',      drill:'tpl',  label:'3PL + Labor',  catId:'expCat3pl'  },
+];
+
+// Monthly value of one expense category (fees come from the revenue map)
+function expCatMonthly(key) {
+  const { expMap, revMap, last6 } = DB;
+  return last6.map(k => key === 'fees'
+    ? Math.abs(revMap[k]?.fees || 0)
+    : (expMap[k]?.[key] || 0));
+}
+
 function renderExpenses() {
   if (!DB) return;
-  const { months6: M, cogs6: C, ups6: U, fees6: F, ltl6: L, tpl6: T, expMap, last6 } = DB;
+  const { months6: M, rev6: R } = DB;
   const sum = arr => arr.reduce((a,v)=>a+v,0);
+
+  // Per-category totals for the selected period
+  const catTotals = EXP_CATS.map(c => sum(expCatMonthly(c.key)));
+  const grandTotal = sum(catTotals);
+  const revTotal = sum(R);
+
+  // Category cards + % of total expenses
+  EXP_CATS.forEach((c, i) => {
+    setTxt(c.catId, f$(catTotals[i]));
+    setTxt(c.catId + 'Pct', fPct(catTotals[i], grandTotal) + ' of expenses');
+  });
+
+  // KPI cards
+  setTxt('expKpiTotal', f$(grandTotal));
+  setTxt('expKpiTotalNote', periodLabel());
+  const maxIdx = catTotals.indexOf(Math.max(...catTotals));
+  setTxt('expKpiLargest', EXP_CATS[maxIdx].label);
+  setTxt('expKpiLargestNote', f$(catTotals[maxIdx]) + ' — ' + fPct(catTotals[maxIdx], grandTotal) + ' of expenses');
+  setTxt('expKpiRatio', fPct(grandTotal, revTotal));
+  setTxt('expKpiRatioNote', 'Total costs vs gross revenue — ' + periodLabel());
+  setTxt('expSub', 'Period: ' + periodLabel());
+  setTxt('expCatSub', 'Breakdown by cost type — ' + periodLabel());
+  setTxt('expTableTitle', 'Monthly Expense Breakdown — ' + periodLabel());
 
   destroyChart('cExpCat');
   CC['cExpCat'] = new Chart(document.getElementById('cExpCat'), {
     type:'doughnut',
     data:{
-      labels:['Product Cost','UPS/FedEx','Amazon Fees','LTL Freight','3PL + Labor'],
-      datasets:[{ data:[sum(C),sum(U),sum(F),sum(L),sum(T)], backgroundColor:COLORS, borderWidth:0, hoverOffset:6 }]
+      labels: EXP_CATS.map(c=>c.label),
+      datasets:[{ data: catTotals, backgroundColor:['#3b82f6','#ef4444','#f59e0b','#8b5cf6','#10b981'], borderWidth:0, hoverOffset:6 }]
     },
     options:{ responsive:true, cutout:'55%',
       plugins:{ legend:{ position:'right', labels:{...LEG,boxWidth:12,padding:8} } } }
   });
 
+  const series = EXP_CATS.map(c => expCatMonthly(c.key));
   destroyChart('cExpTrend');
   CC['cExpTrend'] = new Chart(document.getElementById('cExpTrend'), {
     type:'line',
     data:{
       labels: M,
-      datasets:[
-        { label:'Product Cost', data:C, borderColor:'#3b82f6', tension:0.4, pointRadius:3 },
-        { label:'UPS / FedEx',  data:U, borderColor:'#ef4444', tension:0.4, pointRadius:3 },
-        { label:'Amazon Fees',  data:F, borderColor:'#f59e0b', tension:0.4, pointRadius:3 },
-        { label:'LTL Freight',  data:L, borderColor:'#8b5cf6', tension:0.4, pointRadius:3 },
-        { label:'3PL + Labor',  data:T, borderColor:'#10b981', tension:0.4, pointRadius:3, borderDash:[4,3] },
+      datasets: [
+        { label:'Product Cost', data:series[0], borderColor:'#3b82f6', tension:0.4, pointRadius:3 },
+        { label:'UPS / FedEx',  data:series[1], borderColor:'#ef4444', tension:0.4, pointRadius:3 },
+        { label:'Amazon Fees',  data:series[2], borderColor:'#f59e0b', tension:0.4, pointRadius:3 },
+        { label:'LTL Freight',  data:series[3], borderColor:'#8b5cf6', tension:0.4, pointRadius:3 },
+        { label:'3PL + Labor',  data:series[4], borderColor:'#10b981', tension:0.4, pointRadius:3, borderDash:[4,3] },
       ]
     },
     options:{ ...BASE_OPTS }
   });
 
-  const latestKey = last6[last6.length - 1];
-  const lExp = expMap[latestKey] || {};
-  const invoices = [
-    ['Latest', 'C&N Pool Management', 'Product Cost', 'Indiana', f$(lExp.product||0), '—', 'badge-bg Actual'],
-    ['Latest', 'UPS', 'Shipping', 'All Locations', f$(lExp.shipping||0), '—', 'badge-bg Actual'],
-    ['Latest', 'Freight Partners', 'LTL Freight', 'All Routes', f$(lExp.ltl||0), '—', 'badge-bg Actual'],
-    ['Latest', '3PL Partners', '3PL + Labor', 'All Locations', f$(lExp.tpl||0), '—', 'badge-bg Actual'],
-  ];
-  document.getElementById('tbInvoices').innerHTML = invoices.map(r => {
-    const [cls, stat] = r[6].split(' ');
-    return `<tr>
-      <td>${r[0]}</td><td class="bold">${r[1]}</td>
-      <td>${badge('bb', r[2])}</td>
-      <td class="muted">${r[3]}</td>
-      <td class="bold">${r[4]}</td>
-      <td class="muted">${r[5]}</td>
-      <td>${badge(cls, stat)}</td>
+  // Monthly breakdown table:
+  // Month | Product Cost | UPS / FedEx | Amazon Fees | LTL Freight | 3PL + Labor | Total
+  const tb = document.getElementById('tbExpenses');
+  if (tb) {
+    tb.innerHTML = M.map((m, i) => {
+      const rowTotal = series.reduce((a, s) => a + s[i], 0);
+      return `<tr>
+        <td class="bold">${m}</td>
+        ${series.map(s => `<td>${f$(s[i])}</td>`).join('')}
+        <td class="bold">${f$(rowTotal)}</td>
+      </tr>`;
+    }).join('') +
+    `<tr class="tr-total">
+      <td>${M.length}-Mo Total</td>
+      ${catTotals.map(t => `<td>${f$(t)}</td>`).join('')}
+      <td class="bold">${f$(grandTotal)}</td>
     </tr>`;
-  }).join('');
+  }
+
+  renderFreshnessBadge();
+}
+
+// ── Expense drill-down ───────────────────────────────────────────────
+function expDrill(drillKey, el) {
+  if (!DB) return;
+  const cat = EXP_CATS.find(c => c.drill === drillKey);
+  if (!cat) return;
+  const section = el.closest('.section') || document;
+  const panel   = section.querySelector('.exp-drill');
+  if (!panel) return;
+
+  const { months6: M } = DB;
+  const vals  = expCatMonthly(cat.key);
+  const total = vals.reduce((a,v)=>a+v,0);
+
+  const title = panel.querySelector('.exp-drill-title');
+  if (title) title.textContent = `${cat.label} — monthly detail (${periodLabel()})`;
+  const content = panel.querySelector('#expDrillContent, [id^="expDrill"][id$="Content"]') || panel.lastElementChild;
+  if (content) {
+    content.innerHTML = `<div class="tbl-wrap"><table>
+      <thead><tr><th>Month</th><th>${cat.label}</th><th>% of period total</th></tr></thead>
+      <tbody>
+        ${M.map((m,i)=>`<tr><td class="bold">${m}</td><td>${f$(vals[i])}</td><td class="muted">${fPct(vals[i], total)}</td></tr>`).join('')}
+        <tr class="tr-total"><td>Total</td><td>${f$(total)}</td><td>100%</td></tr>
+      </tbody>
+    </table></div>`;
+  }
+  panel.classList.add('open');
+}
+
+function closeExpDrill() {
+  document.querySelectorAll('.exp-drill').forEach(p => p.classList.remove('open'));
 }
 
 // ── Margins ───────────────────────────────────────────────────────────
 function renderMargins() {
   if (!DB) return;
-  const { skus, ups6, cogs6, last6, revMap } = DB;
+  const { skus, ups6, last6, revMap } = DB;
 
   const totalOrders = last6.reduce((a, k) => a + (revMap[k]?.orders || 0), 0);
   const totalUPS    = ups6.reduce((a,v)=>a+v,0);
@@ -550,51 +706,135 @@ function renderInventory() {
   if (!DB) return;
   const { inventory } = DB;
 
+  // Group rows by location
   const locMap = {};
   for (const row of inventory) {
     const loc = row.location_name || 'Unknown';
-    if (!locMap[loc]) locMap[loc] = { chl: 0, ab: 0, other: 0, type: row.location_type };
-    const sku = (row.sku_code || '').toLowerCase();
-    const name = (row.sku_name || '').toLowerCase();
-    if (sku.includes('chlor') || name.includes('chlor')) locMap[loc].chl += Number(row.quantity_4pack) || 0;
-    else if (sku.includes('acid') || name.includes('acid')) locMap[loc].ab += Number(row.quantity_4pack) || 0;
-    else locMap[loc].other += Number(row.quantity_4pack) || 0;
+    if (!locMap[loc]) locMap[loc] = { units: 0, type: row.location_type, skus: {}, snapshot: row.snapshot_date };
+    const qty = Number(row.quantity_4pack) || 0;
+    locMap[loc].units += qty;
+    const label = row.sku_name || row.sku_code || '?';
+    locMap[loc].skus[label] = (locMap[loc].skus[label] || 0) + qty;
+  }
+  const rows = Object.entries(locMap).sort((a,b) => b[1].units - a[1].units);
+
+  // Visible table: Warehouse | Account | Total Value | Total Units | SKU Breakdown
+  const snap = document.getElementById('invSnapTable');
+  if (snap) {
+    snap.innerHTML = rows.map(([loc, d]) => {
+      const isOwned = (d.type || '').toLowerCase().includes('owned');
+      const breakdown = Object.entries(d.skus)
+        .sort((a,b)=>b[1]-a[1])
+        .map(([n,q]) => `${n}: ${fN(q)}`)
+        .join(' &middot; ');
+      return `<tr>
+        <td class="bold">${loc}</td>
+        <td>${badge(isOwned?'bb':'bp', isOwned?'Owned':'Partner')}</td>
+        <td class="muted">&mdash;</td>
+        <td>${fN(d.units)}</td>
+        <td class="muted">${breakdown || '&mdash;'}</td>
+      </tr>`;
+    }).join('');
+  }
+  const tabs = document.getElementById('invSnapTabs');
+  if (tabs) tabs.style.display = 'none'; // per-account tabs not wired to live data yet
+  const kpis = document.getElementById('invSnapKpis');
+  if (kpis) {
+    const totalUnits = rows.reduce((a,[,d])=>a+d.units,0);
+    const snapDate = DB.freshness.inventory || '—';
+    kpis.innerHTML = `<div class="kpi-row kpi-3">
+      <div class="kpi"><div class="kpi-label">Total Units (4-pack eq.)</div><div class="kpi-val">${fN(totalUnits)}</div><div class="kpi-note">Across ${rows.length} locations</div></div>
+      <div class="kpi"><div class="kpi-label">Locations Reporting</div><div class="kpi-val">${rows.length}</div><div class="kpi-note">Latest snapshot per location</div></div>
+      <div class="kpi"><div class="kpi-label">Snapshot Date</div><div class="kpi-val" style="font-size:20px">${snapDate}</div><div class="kpi-note">Re-run inventory sync to refresh</div></div>
+    </div>`;
+  }
+  setTxt('invSnapTableTitle', 'Inventory by Warehouse — as of ' + (DB.freshness.inventory || '—'));
+
+  // Hidden legacy table — kept for compatibility
+  const legacy = document.getElementById('tbInventory');
+  if (legacy) {
+    legacy.innerHTML = rows.map(([loc, d]) => {
+      const isOwned = (d.type || '').toLowerCase().includes('owned');
+      return `<tr><td>${loc}</td><td>${isOwned?'Owned':'Partner'}</td><td>${fN(d.units)}</td></tr>`;
+    }).join('');
   }
 
-  const wosBadge = wos => badge(wos===0?'bx':wos<0.5?'br':wos<2?'ba':'bg', wos===0?'None':(wos<10?wos.toFixed(1):Math.round(wos))+' wks');
-  const alertBadge = (chl, ab) => {
-    if (chl < 50 || ab < 20)  return badge('br','Critical');
-    if (chl < 150 || ab < 50) return badge('br','Very Low');
-    if (chl < 300 || ab < 100)return badge('ba','Low');
-    return badge('bg','OK');
-  };
+  renderFreshnessBadge();
+}
 
-  const rows = Object.entries(locMap).sort((a,b) => (b[1].chl+b[1].ab) - (a[1].chl+a[1].ab));
-  document.getElementById('tbInventory').innerHTML = rows.map(([loc, d]) => {
-    const isOwned = (d.type || '').toLowerCase().includes('owned');
-    return `<tr>
-      <td class="bold">${loc}</td>
-      <td>${badge(isOwned?'bb':'bp', isOwned?'Owned':'Partner')}</td>
-      <td>${fN(d.chl)}</td><td>${wosBadge(0)}</td>
-      <td>${fN(d.ab)}</td><td>${wosBadge(0)}</td>
-      <td>${d.other||'&mdash;'}</td><td>${wosBadge(0)}</td>
-      <td>${fN(d.chl+d.ab+d.other)}</td>
-      <td>${alertBadge(d.chl, d.ab)}</td>
-    </tr>`;
-  }).join('');
+// ── Insights ──────────────────────────────────────────────────────────
+// Computed from the live data on every render — replaces the old hardcoded
+// insight cards, which were demo text that never updated.
+function renderInsights() {
+  if (!DB) return;
+  const grid = document.getElementById('insightGrid');
+  if (!grid) return;
+  const { skus, rev6, fees6, cogs6, ups6, ltl6, tpl6, months6, allKeys, revMap } = DB;
+  const sum = arr => arr.reduce((a,v)=>a+v,0);
+
+  const cards = [];
+
+  // Top SKU by revenue
+  if (skus.length) {
+    const top = skus[0];
+    const totalRev = skus.reduce((a,s)=>a+(Number(s.total_revenue)||0),0);
+    cards.push({ cls:'opportunity', tag:'Top Performer',
+      title:`${top.sku_name || top.sku_code} leads all SKUs`,
+      val: f$(top.total_revenue||0),
+      body:`${fPct(Number(top.total_revenue)||0, totalRev)} of all-time gross revenue across ${skus.length} SKUs.` });
+  }
+
+  // Peak month (all time, current market filter)
+  if (allKeys.length) {
+    let peakK = allKeys[0], peakV = 0;
+    for (const k of allKeys) {
+      const v = (revMap[k]?.mv||0) + (revMap[k]?.sk||0);
+      if (v > peakV) { peakV = v; peakK = k; }
+    }
+    cards.push({ cls:'info', tag:'Seasonality',
+      title:`${fMonthLong(peakK)} is the biggest revenue month on record`,
+      val: f$(peakV),
+      body:'Pool-chemical demand peaks in late spring — plan inventory and transfers ahead of the May–June ramp.' });
+  }
+
+  // Expense ratio (selected period)
+  const totalExp = sum(fees6)+sum(cogs6)+sum(ups6)+sum(ltl6)+sum(tpl6);
+  const totalRev6 = sum(rev6);
+  if (totalRev6 > 0) {
+    const ratio = totalExp/totalRev6*100;
+    cards.push({ cls: ratio > 85 ? 'warning' : 'info', tag:'Cost Structure',
+      title:`Expenses are ${ratio.toFixed(1)}% of revenue (${periodLabel()})`,
+      val: f$(totalExp),
+      body:`Largest drivers: product cost ${f$(sum(cogs6))} and UPS/FedEx ${f$(sum(ups6))}. Net margin ${(100-ratio).toFixed(1)}%.` });
+  }
+
+  // Shipping cost share
+  if (totalRev6 > 0) {
+    cards.push({ cls: sum(ups6)/totalRev6 > 0.25 ? 'warning' : 'info', tag:'Shipping',
+      title:`Parcel shipping is ${fPct(sum(ups6), totalRev6)} of revenue`,
+      val: f$(sum(ups6)),
+      body:`Across ${months6.length} month(s). Shipment-level analysis (per-location, per-day) lands with the shipping data model.` });
+  }
+
+  grid.innerHTML = cards.map(c => `<div class="insight ${c.cls}">
+    <div class="insight-tag">${c.tag}</div>
+    <div class="insight-title">${c.title}</div>
+    <div class="insight-val">${c.val}</div>
+    <div class="insight-body">${c.body}</div>
+  </div>`).join('');
+
+  renderFreshnessBadge();
 }
 
 // ════════════════════════════════════════════════════════════════════════
 // DISPATCHER
 // ════════════════════════════════════════════════════════════════════════
-// Forecasting/Transfers removed — they now link out to the dedicated
-// forecasting dashboard (see EXTERNAL_NAV above) instead of rendering
-// hardcoded placeholder data. Insights (also hardcoded, never wired to
-// real data) is left un-rendered for the same reason; the nav item will
-// simply show an empty section until/unless it's rebuilt on real data.
+// Forecasting/Transfers link out to the dedicated forecasting dashboard
+// (see EXTERNAL_NAV above) instead of rendering placeholder data.
 const renderers = {
   pl: renderPL, revenue: renderRevenue, shipping: renderShipping,
   expenses: renderExpenses, margins: renderMargins, inventory: renderInventory,
+  insights: renderInsights,
 };
 
 function renderSection(id) {
