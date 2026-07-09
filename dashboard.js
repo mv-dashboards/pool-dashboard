@@ -16,10 +16,8 @@ function checkPW() {
   }
 }
 document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPW(); });
-if (sessionStorage.getItem('mv_auth') === '1') {
-  document.getElementById('pw-gate').classList.add('hidden');
-  initDashboard();
-}
+// NOTE: the already-authenticated auto-init lives at the BOTTOM of this file —
+// it must run after all the consts below are initialized.
 
 // ════════════════════════════════════════════════════════════════════════
 // NAVIGATION — called from onclick="showSection(this,'id')" in the HTML
@@ -869,4 +867,10 @@ async function initDashboard() {
     console.error('Dashboard load error:', err);
     showLoadingState('Data load failed — check console');
   }
+}
+
+// Auto-init when already authenticated this session (must stay at end of file)
+if (sessionStorage.getItem('mv_auth') === '1') {
+  document.getElementById('pw-gate').classList.add('hidden');
+  initDashboard();
 }
