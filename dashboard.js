@@ -24,9 +24,21 @@ if (sessionStorage.getItem('mv_auth') === '1') {
 // ════════════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════════════════════════════════════
+// Some nav items point at the dedicated Pool Chemical Forecasting dashboard
+// instead of a section in this app — that tool already does this live and
+// well, so we link out to it rather than maintaining a second, static copy.
+const EXTERNAL_NAV = {
+  forecasting: 'https://pool-chem-dashboard.netlify.app/',
+  transfers: 'https://pool-chem-dashboard.netlify.app/',
+};
+
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     const id = item.dataset.section;
+    if (EXTERNAL_NAV[id]) {
+      window.open(EXTERNAL_NAV[id], '_blank');
+      return;
+    }
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     item.classList.add('active');
@@ -35,9 +47,53 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
+// ════════════════════════════════════════════════════════════════════════
+// FILTERS — date range + marketplace
+// ════════════════════════════════════════════════════════════════════════
+// G_RANGE: 'this'|'3'|'6'|'ytd'|'all' months back from the latest data month.
+// G_MARKET: 'all'|'mv'|'sk'|'walmart' — which account(s) to include.
+let G_RANGE = '6';
+let G_MARKET = 'all';
+
 function ptab(btn) {
   btn.closest('.period-tabs').querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  const label = (btn.textContent || '').trim().toLowerCase();
+  if (label.includes('this')) G_RANGE = 'this';
+  else if (label.includes('3')) G_RANGE = '3';
+  else if (label.includes('6')) G_RANGE = '6';
+  else if (label.includes('ytd')) G_RANGE = 'ytd';
+  else if (label.includes('all')) G_RANGE = 'all';
+  renderSection(currentSectionId());
+}
+
+// Hook for a future marketplace filter control (dropdown not yet added to
+// dashboard.html — wire an onchange="setMarketFilter(this.value)" select
+// with values all|mv|sk|walmart to enable it).
+function setMarketFilter(val) {
+  G_MARKET = val;
+  renderSection(currentSectionId());
+}
+
+function currentSectionId() {
+  const active = document.querySelector('.section.active');
+  return active ? active.id : 'pl';
+}
+
+// Returns the ordered list of month keys (YYYY-MM) for the current G_RANGE,
+// out of all months present in the data.
+function rangeKeys(allKeysSorted) {
+  if (!allKeysSorted.length) return [];
+  const last = allKeysSorted[allKeysSorted.length - 1];
+  const lastYear = last.slice(0, 4);
+  switch (G_RANGE) {
+    case 'this': return allKeysSorted.slice(-1);
+    case '3':    return allKeysSorted.slice(-3);
+    case '6':    return allKeysSorted.slice(-6);
+    case 'ytd':  return allKeysSorted.filter(k => k.startsWith(lastYear));
+    case 'all':
+    default:     return allKeysSorted;
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -87,18 +143,29 @@ const colorVal = (v, t=0) => `style="color:var(--${v>t?'green':'red'})"`;
 // ════════════════════════════════════════════════════════════════════════
 let DB = null; // populated by loadData()
 
+function marketMatch(source) {
+  const s = (source || '').toLowerCase();
+  if (G_MARKET === 'all') return true;
+  if (G_MARKET === 'mv') return s.includes('mv');
+  if (G_MARKET === 'sk') return s.includes('sk');
+  if (G_MARKET === 'walmart') return s.includes('walmart');
+  return true;
+}
+
 async function loadData() {
-  const [revRows, expRows, skuRows, invRows] = await Promise.all([
-    sbFetch('v_monthly_revenue?order=month_date.asc'),
-    sbFetch('v_monthly_expenses?order=month_date.asc'),
-    sbFetch('v_sku_stats?order=total_revenue.desc'),
-    sbFetch('v_inventory_latest?order=location_name.asc,sku_code.asc')
+  const [revRows, expRows, skuRows, invRows, freshRows] = await Promise.all([
+    sbFetch('v_ops_monthly_revenue?order=month_date.asc'),
+    sbFetch('v_ops_monthly_expenses?order=month_date.asc'),
+    sbFetch('v_ops_sku_stats?order=total_revenue.desc'),
+    sbFetch('v_ops_inventory_latest?order=location_name.asc,sku_code.asc'),
+    sbFetch('v_ops_data_freshness')
   ]);
 
   // ── Build monthly lookup maps ─────────────────────────────────────────
   // Revenue: {YYYY-MM: {mv:n, sk:n, fees:n, orders:n}}
   const revMap = {};
   for (const r of revRows) {
+    if (!marketMatch(r.source)) continue;
     const k = r.month_date.substring(0, 7);
     if (!revMap[k]) revMap[k] = { mv: 0, sk: 0, fees: 0, orders: 0 };
     const isMV = (r.source || '').toLowerCase().includes('mv');
@@ -120,15 +187,12 @@ async function loadData() {
   }
 
   // ── Build ordered month lists ─────────────────────────────────────────
-  // All months with data
   const allKeys = [...new Set([
     ...Object.keys(revMap),
     ...Object.keys(expMap)
   ])].sort();
 
-  // Last 6 months with revenue
-  const revKeys = Object.keys(revMap).sort();
-  const last6   = revKeys.slice(-6);
+  const selKeys = rangeKeys(allKeys);
 
   const fmt = k => {
     const d = new Date(k + '-01');
@@ -137,17 +201,20 @@ async function loadData() {
 
   const get = (map, k, field) => map[k] ? (map[k][field] || 0) : 0;
 
-  DB = {
-    // 6-month arrays (P&L, Expenses)
-    months6:  last6.map(fmt),
-    rev6:     last6.map(k => get(revMap, k, 'mv') + get(revMap, k, 'sk')),
-    fees6:    last6.map(k => get(revMap, k, 'fees')),
-    cogs6:    last6.map(k => get(expMap, k, 'product')),
-    ups6:     last6.map(k => get(expMap, k, 'shipping')),
-    ltl6:     last6.map(k => get(expMap, k, 'ltl')),
-    tpl6:     last6.map(k => get(expMap, k, 'tpl')),
+  const fresh = (freshRows && freshRows[0]) || {};
 
-    // All-time arrays (Revenue history chart)
+  DB = {
+    // Selected-range arrays (P&L, Expenses) — driven by the period filter
+    months6:  selKeys.map(fmt),
+    rev6:     selKeys.map(k => get(revMap, k, 'mv') + get(revMap, k, 'sk')),
+    fees6:    selKeys.map(k => get(revMap, k, 'fees')),
+    cogs6:    selKeys.map(k => get(expMap, k, 'product')),
+    ups6:     selKeys.map(k => get(expMap, k, 'shipping')),
+    ltl6:     selKeys.map(k => get(expMap, k, 'ltl')),
+    tpl6:     selKeys.map(k => get(expMap, k, 'tpl')),
+
+    // All-time arrays (Revenue history chart) — unaffected by period filter,
+    // still respects the marketplace filter
     allMonths: allKeys.map(fmt),
     allMV:     allKeys.map(k => get(revMap, k, 'mv')),
     allSK:     allKeys.map(k => get(revMap, k, 'sk')),
@@ -158,8 +225,15 @@ async function loadData() {
     // Inventory
     inventory: invRows,
 
+    // Data freshness (most recent date loaded per source table)
+    freshness: {
+      orders: fresh.latest_order_date || null,
+      expenses: fresh.latest_expense_date || null,
+      inventory: fresh.latest_inventory_date || null,
+    },
+
     // Raw maps for computed values
-    revMap, expMap, last6
+    revMap, expMap, last6: selKeys
   };
 }
 
@@ -203,11 +277,9 @@ function renderPL() {
   const neg = v => `<span class="${v<0?'red':'green'}">${v<0?'('+f$(-v)+')':f$(v)}</span>`;
   const act = v => `<span class="badge bg">${f$(v)}</span>`;
 
-  const labelsFull = ['Nov 2025','Dec 2025','Jan 2026','Feb 2026','Mar 2026','Apr 2026',
-    'May 2026','Jun 2026','Jul 2026','Aug 2026','Sep 2026','Oct 2026'];
   document.getElementById('tbPL').innerHTML =
     M.map((m, i) => `<tr>
-      <td class="bold">${labelsFull[i] || m}</td>
+      <td class="bold">${m}</td>
       <td>${act(R[i])}</td>
       <td class="red">(${f$(F[i])})</td>
       <td class="red">(${f$(U[i])})</td>
@@ -221,7 +293,7 @@ function renderPL() {
       <td class="muted"></td>
     </tr>`).join('') +
     `<tr class="tr-total">
-      <td>6-Mo Total</td>
+      <td>${M.length}-Mo Total</td>
       <td>${act(sum(R))}</td>
       <td class="red">(${f$(sum(F))})</td>
       <td class="red">(${f$(sum(U))})</td>
@@ -237,13 +309,38 @@ function renderPL() {
   const latestRev = R[R.length-1];
   const el = document.getElementById('kpiRevApr');
   if (el) el.textContent = f$(latestRev);
+
+  renderFreshnessBadge();
+}
+
+// ── Data freshness indicator ────────────────────────────────────────
+// Renders (or creates, if not already in the HTML) a small "data as of"
+// notice so it's always obvious how current the numbers are — the exact
+// thing that was missing when this dashboard silently went stale before.
+function renderFreshnessBadge() {
+  if (!DB) return;
+  let el = document.getElementById('dataFreshness');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'dataFreshness';
+    el.style.cssText = 'font-size:11px;color:var(--text3);padding:6px 14px;';
+    const foot = document.querySelector('.sidebar-foot');
+    if (foot) foot.prepend(el);
+  }
+  const dates = [DB.freshness.orders, DB.freshness.expenses, DB.freshness.inventory].filter(Boolean);
+  if (!dates.length) {
+    el.textContent = 'Data as of: no data loaded yet';
+    return;
+  }
+  const latest = dates.sort().slice(-1)[0];
+  el.textContent = `Data as of: ${latest}`;
 }
 
 // ── Revenue ──────────────────────────────────────────────────────────
 function renderRevenue() {
   if (!DB) return;
   const { allMonths, allMV, allSK, skus } = DB;
-  const allWalmart = allMonths.map(() => 0); // Walmart not in orders table yet
+  const allWalmart = allMonths.map(() => 0); // Walmart not in ops_orders yet
 
   destroyChart('cRevMonth');
   CC['cRevMonth'] = new Chart(document.getElementById('cRevMonth'), {
@@ -284,11 +381,15 @@ function renderRevenue() {
     <td class="green">${f$(s.net_revenue || 0)}</td>
     <td>${s.total_qty > 0 ? f$((s.total_revenue||0) / s.total_qty) : '—'}</td>
   </tr>`).join('');
+
+  renderFreshnessBadge();
 }
 
 // ── Shipping ─────────────────────────────────────────────────────────
+// NOTE: still placeholder per-location/per-day averages, same as before —
+// no shipment-level table exists yet to compute this from real data.
+// Left unchanged pending a future phase that ingests UPS shipment detail.
 function renderShipping() {
-  // Shipping avg costs by location — computed from UPS expense data vs order counts
   const { revMap, expMap, last6 } = DB;
 
   destroyChart('cShipLoc');
@@ -321,7 +422,6 @@ function renderShipping() {
       scales:{ x:{ticks:TICK,grid:GRID}, y:{ticks:{...TICK,callback:v=>'$'+v},grid:GRID} } }
   });
 
-  // 6-month UPS total for display
   const upsTotal = last6.reduce((a,k) => a + (expMap[k]?.shipping || 0), 0);
   const ordTotal = last6.reduce((a,k) => a + ((revMap[k]?.mv||0) + (revMap[k]?.sk||0) > 0 ? revMap[k].orders : 0), 0);
   const avgCost  = ordTotal > 0 ? upsTotal / ordTotal : 0;
@@ -376,7 +476,6 @@ function renderExpenses() {
     options:{ ...BASE_OPTS }
   });
 
-  // Expense totals for invoice summary (from most recent month in DB)
   const latestKey = last6[last6.length - 1];
   const lExp = expMap[latestKey] || {};
   const invoices = [
@@ -403,7 +502,6 @@ function renderMargins() {
   if (!DB) return;
   const { skus, ups6, cogs6, last6, revMap } = DB;
 
-  // Estimated per-unit shipping from UPS total / total orders in period
   const totalOrders = last6.reduce((a, k) => a + (revMap[k]?.orders || 0), 0);
   const totalUPS    = ups6.reduce((a,v)=>a+v,0);
   const avgShip     = totalOrders > 0 ? totalUPS / totalOrders : 21;
@@ -452,7 +550,6 @@ function renderInventory() {
   if (!DB) return;
   const { inventory } = DB;
 
-  // Group by location, aggregate chlorine and acid blue
   const locMap = {};
   for (const row of inventory) {
     const loc = row.location_name || 'Unknown';
@@ -474,7 +571,7 @@ function renderInventory() {
 
   const rows = Object.entries(locMap).sort((a,b) => (b[1].chl+b[1].ab) - (a[1].chl+a[1].ab));
   document.getElementById('tbInventory').innerHTML = rows.map(([loc, d]) => {
-    const isOwned = (d.type || '').toLowerCase().includes('owned') || ['indiana','texas','nevada'].some(s => loc.toLowerCase().includes(s));
+    const isOwned = (d.type || '').toLowerCase().includes('owned');
     return `<tr>
       <td class="bold">${loc}</td>
       <td>${badge(isOwned?'bb':'bp', isOwned?'Owned':'Partner')}</td>
@@ -487,125 +584,17 @@ function renderInventory() {
   }).join('');
 }
 
-// ── Transfers ─────────────────────────────────────────────────────────
-function renderTransfers() {
-  const rows = [
-    ['5/5','5/8','3 bd','Outbound','3PL - Indiana','3PL - N. Carolina',192,144,6,'Delivered','PRO 326164530'],
-    ['5/5','5/12','5 bd','Outbound','3PL - Indiana','3PL - Nevada',192,96,6,'Shipped','PRO 325829794'],
-    ['5/8','5/13','3 bd','Outbound','3PL - Indiana','MV - Texas',288,0,6,'Shipped','PRO 326164548'],
-    ['5/11','5/11','&mdash;','Inbound TL','Supplier','3PL - Indiana',1152,'&mdash;',24,'Confirmed','Chlorine TL #1'],
-    ['5/12','5/12','&mdash;','Inbound TL','Supplier','3PL - Indiana','&mdash;',1152,24,'Confirmed','Acid Blue TL'],
-    ['5/14','5/14','&mdash;','Inbound TL','Supplier','3PL - Indiana',1152,'&mdash;',24,'Confirmed','Chlorine TL #2'],
-  ];
-  const stBadge = s => badge({Delivered:'bx',Shipped:'ba',Confirmed:'bg',Planned:'bb'}[s]||'bx', s);
-  const typBadge = t => badge(t==='Inbound TL'?'bg':'bp', t);
-  document.getElementById('tbTransfers').innerHTML = rows.map(r => `<tr>
-    <td>${r[0]}</td><td>${r[1]}</td><td class="muted">${r[2]}</td>
-    <td>${typBadge(r[3])}</td>
-    <td class="muted">${r[4]}</td><td class="bold">${r[5]}</td>
-    <td>${r[6]}</td><td>${r[7]}</td><td>${r[8]}</td>
-    <td>${stBadge(r[9])}</td>
-    <td class="muted" style="font-size:11px">${r[10]}</td>
-  </tr>`).join('');
-}
-
-// ── Forecasting ───────────────────────────────────────────────────────
-function renderForecasting() {
-  const weeks    = ['2/9','2/16','2/23','3/2','3/9','3/16','3/23','3/30','4/6','4/13','4/20','4/27','5/4','5/11','5/18','5/25','6/1','6/8','6/15','6/22'];
-  const actual   = [420,380,450,890,1240,1560,1820,2100,2280,2028,2285,2823,2765,null,null,null,null,null,null,null];
-  const projected= [null,null,null,null,null,null,null,null,null,null,null,null,2765,3400,4200,5600,7400,9800,13200,17000];
-
-  destroyChart('cDemand');
-  CC['cDemand'] = new Chart(document.getElementById('cDemand'), {
-    type:'line',
-    data:{ labels:weeks, datasets:[
-      { label:'Actual Orders', data:actual, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.08)', fill:true, tension:0.4, pointRadius:3 },
-      { label:'Projected',     data:projected, borderColor:'#f59e0b', borderDash:[6,3], backgroundColor:'rgba(245,158,11,0.05)', fill:true, tension:0.4, pointRadius:3 }
-    ]},
-    options:{ ...BASE_OPTS, scales:{ x:{ticks:{...TICK,maxRotation:45},grid:GRID}, y:{ticks:TICK,grid:GRID} } }
-  });
-
-  destroyChart('cSeason');
-  CC['cSeason'] = new Chart(document.getElementById('cSeason'), {
-    type:'line',
-    data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets:[
-      { label:'2025', data:[408,448,709,907,3188,6133,8754,6427,6737,6005,3232,2075], borderColor:'#64748b', borderDash:[4,2], tension:0.4, pointRadius:2 },
-      { label:'2026 Actual', data:[2274,1788,5969,9865,null,null,null,null,null,null,null,null], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.08)', fill:true, tension:0.4, pointRadius:3 },
-      { label:'2026 Projected', data:[null,null,null,9865,22000,45000,75000,55000,51000,44000,null,null], borderColor:'#f59e0b', borderDash:[6,3], tension:0.4, pointRadius:2 }
-    ]},
-    options:{ ...BASE_OPTS }
-  });
-
-  const history = [
-    ['Jan',null,408,'$114,905',2274,'+457%','Actual'],
-    ['Feb',null,448,'$88,734',1788,'+299%','Actual'],
-    ['Mar','$21,810',709,'$305,967',5969,'+742%','Actual'],
-    ['Apr','$79,502',907,'$487,956',9865,'+514%','Actual'],
-    ['May','$293,678',3188,'~$600,000','~22,000','~+104%','Projected'],
-    ['Jun','$328,608',6133,'~$950,000','~45,000','~+189%','Projected'],
-    ['Jul','$408,942',8754,'~$1,300,000','~75,000','~+757%','Projected'],
-    ['Aug','$305,490',6427,'~$975,000','~55,000','~+766%','Projected'],
-    ['Sep','$376,520',6737,'~$1,020,000','~51,000','~+657%','Projected'],
-    ['Oct','$302,188',6005,'~$870,000','~44,000','~+632%','Projected'],
-    ['Nov','$147,624',3232,'~$430,000','~14,000','~+333%','Projected'],
-    ['Dec','$111,363',2075,'~$330,000','~10,000','~+382%','Projected'],
-  ];
-  document.getElementById('tbForecast').innerHTML = history.map(r => `<tr>
-    <td class="bold">${r[0]}</td>
-    <td class="muted">${r[1]||'&mdash;'}</td><td class="muted">${fN(r[2])}</td>
-    <td class="${r[6]==='Actual'?'bold':''}">${r[3]}</td>
-    <td>${r[4]}</td>
-    <td class="green">${r[5]}</td>
-    <td>${badge(r[6]==='Actual'?'bg':'ba', r[6])}</td>
-  </tr>`).join('');
-}
-
-// ── Insights ─────────────────────────────────────────────────────────
-function renderInsights() {
-  const cards = [
-    { type:'alert', tag:'Margin Risk — Immediate', title:'1-Pack Orders Are Likely Unprofitable',
-      val:'-$3 to -$6 / order',
-      body:'Shipping a single bottle costs ~$12. Product cost ~$4.17. Amazon fee ~15%. Packaging and labor push this SKU deep into negative margin. Recommend pricing analysis and possible delisting or price increase.' },
-    { type:'alert', tag:'Cash Flow Risk', title:'Antifreeze Ties Up $3,948 at Net-7',
-      val:'~350 wks of supply',
-      body:'350 units × $11.28 cost = $3,948 paid on Net-7 terms. Demand is ~1 unit/week. Won\'t sell through until winter. Capital could be deployed to Acid Blue — your highest-demand, supply-constrained product.' },
-    { type:'warning', tag:'Revenue Leak — Quantified', title:'Saturday FedEx Premium Costs ~$4,800/Month',
-      val:'~$4,800 / month',
-      body:'~620 Saturday orders from Indiana ship FedEx at $28.90 avg vs. UPS weekday $21.10. That\'s $7.80 × 620 = $4,836/month in avoidable cost. Structural — needs mitigation strategy.' },
-    { type:'warning', tag:'Unrecovered Loss', title:'UPS Damage Claims Not Being Filed',
-      val:'~$4,200 est./month',
-      body:'Transit damage is occurring but no systematic UPS claims process exists. Based on industry damage rates for liquid chemicals, estimated monthly unrecovered loss is $3,000–$5,000. Need a tracking and filing workflow.' },
-    { type:'opportunity', tag:'Biggest Revenue Lever', title:'Acid Blue Supply is the Binding Constraint',
-      val:'$50K+/mo upside',
-      body:'Acid Blue grew 51× YoY in April. You\'re limited to 1 TL every other week (~574 units). At demand trajectory, you could sell 3 TLs/month. Unlocking supply is the single highest-impact revenue action available.' },
-    { type:'opportunity', tag:'Expansion ROI', title:'Pennsylvania Facility Unlocks Northeast Volume',
-      val:'~2,060+ units/mo',
-      body:'NY+NJ alone = 4,000+ units historically from Indiana with long UPS zones (4-5 days). A PA facility reduces transit to 1-2 days for NY, NJ, CT, MA, RI, NH, VT, ME, DE, DC. Needs shipping cost model to quantify savings.' },
-    { type:'opportunity', tag:'Year-Round Revenue', title:'B2B Commercial Accounts Offset Seasonality',
-      val:'Nov–Mar revenue gap',
-      body:'Partner 3PL agreements run year-round but orders collapse in off-season. FL (0.68 AB/CL ratio) and TX (0.44) suggest year-round pool operators. Direct B2B outreach to aquatic centers, hotels, YMCAs removes Amazon fees and smooths revenue.' },
-    { type:'info', tag:'Competitive Intelligence', title:'Spreetail Has Automated Repricing — You Don\'t',
-      val:null,
-      body:'Your primary competitor uses a real-time automated pricing engine. Manual pricing management means you\'re potentially leaving Buy Box wins on the table or over-discounting. A repricing tool is worth evaluating — particularly for your top 3 ASINs which drive 85%+ of revenue.' },
-  ];
-
-  document.getElementById('insightGrid').innerHTML = cards.map(c => `
-    <div class="insight ${c.type}">
-      <div class="insight-tag">${c.tag}</div>
-      <div class="insight-title">${c.title}</div>
-      ${c.val ? `<div class="insight-val">${c.val}</div>` : ''}
-      <div class="insight-body">${c.body}</div>
-    </div>
-  `).join('');
-}
-
 // ════════════════════════════════════════════════════════════════════════
 // DISPATCHER
 // ════════════════════════════════════════════════════════════════════════
+// Forecasting/Transfers removed — they now link out to the dedicated
+// forecasting dashboard (see EXTERNAL_NAV above) instead of rendering
+// hardcoded placeholder data. Insights (also hardcoded, never wired to
+// real data) is left un-rendered for the same reason; the nav item will
+// simply show an empty section until/unless it's rebuilt on real data.
 const renderers = {
   pl: renderPL, revenue: renderRevenue, shipping: renderShipping,
   expenses: renderExpenses, margins: renderMargins, inventory: renderInventory,
-  transfers: renderTransfers, forecasting: renderForecasting, insights: renderInsights
 };
 
 function renderSection(id) {
@@ -635,7 +624,7 @@ async function initDashboard() {
     await loadData();
     showLiveState();
     renderPL();
-    renderInsights();
+    renderFreshnessBadge();
   } catch (err) {
     console.error('Dashboard load error:', err);
     showLoadingState('Data load failed — check console');
